@@ -10,13 +10,34 @@ So before doing anything you shuold:
 
 #### Start lab
 
-1. Clone this repo: `git clone git@github.com:kinderp/docker101.git`
-2. move to `ubuntu` dir: `cd docker101/playground/ubuntu/`
-3. Run: `vagrant up` and wait
-5. Ssh into vm: `vagrant ssh`
-6. Check if docker has been provisioned correctly
+* Clone this repo: `git clone git@github.com:kinderp/docker101.git`
+* move to `ubuntu` dir: `cd docker101/playground/ubuntu/`
+* Run: `vagrant up` and wait
+* Ssh into vm: `vagrant ssh`
+* Check if docker has been provisioned correctly
    * `systemctl status docker`
    * `docker ps`
 
+#### Stop lab
+
+* `vagrant halt` 
+
+#### Suspend - Resume lab
+
+* `vagrant suspend`
+* `vagrant resume`
+
+#### Destroy lab
+
+Lab takes space on disk so it's a good idea removing it after your training session.
+
+* Before destroying lab please check if it exists:
+  ```
+  VBoxManage list vms|grep nephila
+  "nephila_ubuntu" {9e6b0cee-9a45-4c50-83fd-8809b21075a1}
+  ```
+* `vagrant destroy`
+* You shouldn't get any output now running: `VBoxManage list vms|grep nephila`
+* `vagrant destroy`
 
 
