@@ -10,10 +10,10 @@ So before doing anything you shuold:
 
 #### Start lab
 
-1. Clone this repo
-2. move to `ubuntu` dir
-3. Run `vagrant up` and wait
-5. Ssh into vm `vagrant ssh`
+1. Clone this repo: `git clone git@github.com:kinderp/docker101.git`
+2. move to `ubuntu` dir: `cd docker101/playground/ubuntu/`
+3. Run: `vagrant up` and wait
+5. Ssh into vm: `vagrant ssh`
 6. Check if docker has been provisioned correctly
    * `systemctl status docker`
    * `docker ps`
