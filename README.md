@@ -144,3 +144,20 @@ bindresvport.blacklist	default		fstab	      hostname	 kernel     libaudit.conf  
   can help you to know which layers are taking too space.
   
   Remember if you need more specific infos about an image you can use **docker inspect <image_id>**. 
+  
+  ### Docker Registries
+  
+  * Image are stored in registries
+  * DockerHub is the most famous one
+  * Images name are important because are related with registries
+  * Do exist official images and unofficial ones
+  * When you pulled ubuntu image, you ran: `docker pull ubuntu` but in theory in a more verbose manner you could run `docker pull docker.io/ubuntu`
+  * `docker.io` is the name of the registry hub, dockerhub is the default one so it can be omitted as we did
+  * To be honest `ubuntu` is not the image's name but the repo name (on the registry dockerhub) where we pulled a specif version of an image identified by a `TAG`. We omitted tag in pull command (we ran: `docker pull ubuntu`) so docker used as default `latest` value for tag.
+  * Supported tag are always showed in the repo page (see [here](https://hub.docker.com/_/ubuntu) for ubuntu)
+  * So for example if i need a very old ubuntu version i can use tag `14.04` and run: `docker pull ubuntu:14.04`
+  * Summarizing: images' coordinates are defined by:
+    * registry name
+    * reposiory name
+    * image tag
+  In this form: `registry_name/repository_name:tag` (e.g. `docker.io/ubuntu:14.04`)
