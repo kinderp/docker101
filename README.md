@@ -273,4 +273,28 @@ bindresvport.blacklist	default		fstab	      hostname	 kernel     libaudit.conf  
 So what are Dockergile does is: running some command to update ubuntu and intsall nc then informing us 8888 will be exposed at runtime and the defines running netcat on port 8888 as default command for each contianer based on this image.
 
 Ok, finally let'd build this image with **docker build**:
+Inside yout lab (`vagrant ssh`)
 
+  ```
+  cd /vagrant/examples/
+  ```
+
+  ```
+  docker build -t my-server .
+  ```
+  
+  * `-t`set name and tag of yout image, but remember you can alway re-tag later with **docker tag**
+  * `-f` we didn't use this options but it specify Dockerfile to use. if omitted docker will aspect a `Dockergile` with capital D
+  * `.` dot at the end is the **BUILD CONTEXT** and simplyfing is the location that contains file to be send to docker deamon. In other words all inside current dir `.` will be sent to docker deamon during building process and will be present inside the final image. You can use `.gitignore` to avoid some dir or specific file in the same way you use `.gitignore`  
+  
+  If building process went well, you should see `my-server` image running:
+  
+  ```
+  vagrant@docker101:/vagrant/examples$ docker image ls
+  REPOSITORY          TAG       IMAGE ID       CREATED          SIZE
+  my-server           latest    dd122a75be96   58 seconds ago   104MB
+  kinderp/my_ubuntu   latest    1318b700e415   3 days ago       72.8MB
+  ubuntu              latest    1318b700e415   3 days ago       72.8MB
+  ubuntu              14.04     13b66b487594   4 months ago     197MB
+  ```
+  
