@@ -358,3 +358,105 @@ But now it's time to die (cit.), let's run:
   CONTAINER ID   IMAGE       COMMAND        CREATED          STATUS                       PORTS     NAMES
   17d52393e4bf   my-server   "nc -l 8888"   21 minutes ago   Exited (137) 2 minutes ago             netcat
   ```
+
+### Starting Containers
+
+You can restart a stopped container with **docker start** knowing as always conteiner_id
+
+  ```
+  vagrant@docker101:~$ docker start 17d52393e4bf
+  17d52393e4bf
+  ```
+
+  ```
+  vagrant@docker101:~$ docker ps 
+  CONTAINER ID   IMAGE       COMMAND        CREATED       STATUS         PORTS                    NAMES
+  17d52393e4bf   my-server   "nc -l 8888"   7 hours ago   Up 2 seconds   0.0.0.0:8888->8888/tcp   netcat
+  ```
+
+### Getting inside a container
+
+One of the most useful commands in docker is **docker exec**, using it you can exucute a command inside a contaier.
+For example i could run `ps` to knwo which processes are running in a container
+
+  ```
+  vagrant@docker101:~$ docker exec 17d52393e4bf ps
+      PID TTY          TIME CMD
+        1 ?        00:00:00 nc
+      111 ?        00:00:00 ps
+  ```
+  
+  an that's correct, we have our server (`netcat` on 8888) and ps ofc over there.
+  
+  But exec can become even more useful because it permits you to get an interctive shell, just exucute:
+  
+  ```
+  vagrant@docker101:~$ docker exec -it 17d52393e4bf bash
+  root@17d52393e4bf:/#
+  ```
+  
+  You're in ;)
+  
+### Removing Container and Persistent data
+
+You know container are ephemeral but how much they are, let's clarify it.
+
+Let's suppose we have a bash shell gotten as you saw in the previous chapter, what happens if we write a file and then stop and re-start it.
+
+  ```
+  root@17d52393e4bf:/# echo "black hole..." > /tmp/entropy 
+  root@17d52393e4bf:/# cat /tmp/entropy 
+  black hole...
+  root@17d52393e4bf:/# exit
+  exit
+  vagrant@docker101:~$ 
+  ```
+  
+  ```
+  vagrant@docker101:~$ docker stop 17d52393e4bf
+  17d52393e4bf
+  vagrant@docker101:~$ docker start 17d52393e4bf
+  17d52393e4bf
+  vagrant@docker101:~$ docker exec 17d52393e4bf cat /tmp/entropy
+  black hole...
+  ```
+  
+  So data surive to a stop/start process but they don't to a remove command.
+  If you remove your container you'll loose all data in it.
+  When you write something on a container new layers are added on top of all those (read only) added during building phase. 
+  Once you remove a container docker will remove layers written after building phase.
+  You can see these layers:
+  
+  ```
+  vagrant@docker101:~$ sudo ls -l /var/lib/docker/overlay2/78932b4f131b8138606a80252a394d36b11ee2ca2dd8018f545f558a298327f6/diff/tmp
+  total 4
+  -rw-r--r-- 1 root root 14 Jul 30 18:54 entropy
+  ```
+  
+  Layers are stored in your local machine in `/var/lib/docker/overlay2`, `overlay2` is the name of storage driver.
+  
+  Let's try to remove that container (a running container) with **docker rm**
+  
+  ```
+  vagrant@docker101:~$ docker rm 17d52393e4bf
+  Error response from daemon: You cannot remove a running container 17d52393e4bf43ed76e3015104b8779409b53fd2ffbb723bda09bd092a3b88eb. Stop the container before attempting removal or force remove
+  ```
+  Ok, we can't remove a running container. We could force removing with `docker rm -f 17d52393e4bf` but let's follow the right way.
+  
+  ```
+  vagrant@docker101:~$ docker stop 17d52393e4bf && docker rm 17d52393e4bf
+  17d52393e4bf
+  17d52393e4bf
+  ```
+  
+  ```
+  vagrant@docker101:~$ sudo ls -l /var/lib/docker/overlay2/78932b4f131b8138606a80252a394d36b11ee2ca2dd8018f545f558a298327f6/
+  ls: cannot access '/var/lib/docker/overlay2/78932b4f131b8138606a80252a394d36b11ee2ca2dd8018f545f558a298327f6/': No such file or directory
+  ```
+  
+  Our layer has gone, we've lost data :(
+  
+  
+  
+  
+  
