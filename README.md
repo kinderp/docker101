@@ -145,6 +145,8 @@ bindresvport.blacklist	default		fstab	      hostname	 kernel     libaudit.conf  
   
   Remember if you need more specific infos about an image you can use **docker inspect <image_id>**. 
   
+  And last but not least you can remove an image running **docker image rm** or **docker rmi** folowed by its ID
+  
   ### Docker Registries
   
   * Image are stored in registries
@@ -161,3 +163,76 @@ bindresvport.blacklist	default		fstab	      hostname	 kernel     libaudit.conf  
     * reposiory name
     * image tag
   In this form: `registry_name/repository_name:tag` (e.g. `docker.io/ubuntu:14.04`)
+  
+  #### Docker Registries Commands
+  
+  Docker registries commands are basically two (maybe three) and one of them has been already mentioned: **docker pull** it's used to download an image from a registry.
+  The second one is **docker push** used to upload an image to a registry. You'd need an account on DockerHub if you want to push an image and after doing that you have to login in your account running **docker login**
+  
+  ```
+  vagrant@docker101:~$ docker login
+  Login with your Docker ID to push and pull images from Docker Hub. If you don't have a Docker ID, head over to https://hub.docker.com to create one.
+  Username: kinderp
+  Password: 
+  WARNING! Your password will be stored unencrypted in /home/vagrant/.docker/config.json.
+  Configure a credential helper to remove this warning. See
+  https://docs.docker.com/engine/reference/commandline/login/#credentials-store
+
+  Login Succeeded
+  ```
+  
+  So now let's suppose i want to push ubutu image i've previously pulled to my dckerhub account. Because of images' coordinates depends on repo name (in this case my account on dockerhub) I have to rename my image running **docker tag**
+  
+  ```
+  vagrant@docker101:~$ docker tag ubuntu kinderp/my_ubuntu
+  ```
+  
+  Note that: `kinderp` is my account on dockerhub (repository name on dockerhub in other words). 
+  
+  You should see this renamed image running:
+  
+  ```
+  vagrant@docker101:~$ docker images
+  REPOSITORY          TAG       IMAGE ID       CREATED        SIZE
+  kinderp/my_ubuntu   latest    1318b700e415   3 days ago     72.8MB
+  ubuntu              latest    1318b700e415   3 days ago     72.8MB
+  ubuntu              14.04     13b66b487594   4 months ago   197MB
+  ```
+  
+  Now i'm ready to push ubuntu to my repository running **docker push**:
+  
+  ```
+  vagrant@docker101:~$ docker push kinderp/my_ubuntu
+  Using default tag: latest
+  The push refers to repository [docker.io/kinderp/my_ubuntu]
+  7555a8182c42: Mounted from library/ubuntu 
+  latest: digest: sha256:1e48201ccc2ab83afc435394b3bf70af0fa0055215c1e26a5da9b50a1ae367c9 size: 529
+  ```
+  
+  We can now remove this image locally:
+  
+  ```
+  vagrant@docker101:~$ docker image rm kinderp/my_ubuntu
+  Untagged: kinderp/my_ubuntu:latest
+  Untagged: kinderp/my_ubuntu@sha256:1e48201ccc2ab83afc435394b3bf70af0fa0055215c1e26a5da9b50a1ae367c9
+  ```
+  
+  then verify it has been removed
+  
+  ```
+  vagrant@docker101:~$ docker image ls
+  REPOSITORY   TAG       IMAGE ID       CREATED        SIZE
+  ubuntu       latest    1318b700e415   3 days ago     72.8MB
+  ubuntu       14.04     13b66b487594   4 months ago   197MB
+  ```
+  
+  and finaly re-pull it from your account
+  
+  ```
+  vagrant@docker101:~$ docker pull kinderp/my_ubuntu
+  Using default tag: latest
+  latest: Pulling from kinderp/my_ubuntu
+  Digest: sha256:1e48201ccc2ab83afc435394b3bf70af0fa0055215c1e26a5da9b50a1ae367c9
+  Status: Downloaded newer image for kinderp/my_ubuntu:latest
+  docker.io/kinderp/my_ubuntu:latest
+  ```
