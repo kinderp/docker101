@@ -332,3 +332,29 @@ Inside your lab (`vagrant ssh`) run:
   ciao sei il mio server?
   ```
   
+
+### Stopping Containers
+
+It's time to stop your container. Before running **docker stop** you have to get `container_id` with **docker ps**
+
+  ```
+  vagrant@docker101:~$ docker ps
+  CONTAINER ID   IMAGE       COMMAND        CREATED          STATUS          PORTS                    NAMES
+  17d52393e4bf   my-server   "nc -l 8888"   11 minutes ago   Up 11 minutes   0.0.0.0:8888->8888/tcp   netcat
+  ```
+  
+So **docker ps** shows all running containers. If you wanna see all containers even those ones running in the past and died, run **docker ps -a**
+But now it's time to die (cit.), let's run:
+
+  ```
+  vagrant@docker101:~$ docker stop 17d52393e4bf
+  17d52393e4bf
+  ```
+
+  You'll see stopped container with **docker ps -a**
+  
+  ```
+  vagrant@docker101:~$ docker ps -a
+  CONTAINER ID   IMAGE       COMMAND        CREATED          STATUS                       PORTS     NAMES
+  17d52393e4bf   my-server   "nc -l 8888"   21 minutes ago   Exited (137) 2 minutes ago             netcat
+  ```
