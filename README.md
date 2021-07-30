@@ -82,7 +82,7 @@ Inside your lab (`vagrant ssh`) let's run this:
   docker pull ubuntu
   ```
 
-  You should see somthing like this:
+  You should see something like this:
   
   ```
   vagrant@docker101:~$ docker pull ubuntu
@@ -94,4 +94,53 @@ Inside your lab (`vagrant ssh`) let's run this:
   docker.io/library/ubuntu:latest
   ```
   
-  Now you have ubuntu image in your disk
+  Now you have ubuntu image in your disk and you can verify that's true just running **docker images ls** or simply **docker images**
+  
+  ```
+  docker images ls
+  ```
+  
+  ```
+  vagrant@docker101:~$ docker images
+  REPOSITORY   TAG       IMAGE ID       CREATED      SIZE
+  ubuntu       latest    1318b700e415   3 days ago   72.8MB
+  ```
+
+  As you can see above an image has a `TAG` and an `ID`. Id ofc identifies uniquely that image while tag is used to distinguish different versions (usually different releases of the code)
+  
+  Once you have an image you can run containers from that.
+  If you're wondering where these stuffs are stored in your disk, it depends on the storage driver: `/var/lib/docker` and the name of the driver, in my case:
+  
+  ```
+  vagrant@docker101:~$ sudo ls -l /var/lib/docker/overlay2/
+  total 8
+  drwx------ 3 root root 4096 Jul 30 07:17 8986a619617ea9f23266140e6e45ad8a25b0d443dca935dfe023e585c461ce3c
+  ```
+  
+  that one is the base (and only layer) in other words ubuntu root fs:
+  
+  ```
+  vagrant@docker101:~$ sudo ls /var/lib/docker/overlay2/8986a619617ea9f23266140e6e45ad8a25b0d443dca935dfe023e585c461ce3c/diff/etc
+  adduser.conf		cron.d		deluser.conf  gai.conf	 hosts	    ld.so.cache    login.defs	networks       pam.d	  rc1.d  rc6.d	      selinux  subuid	    update-  motd.d
+  alternatives		cron.daily	dpkg	      group	 init.d     ld.so.conf	   logrotate.d	nsswitch.conf  passwd	  rc2.d  rcS.d	      shadow   sysctl.conf  xattr.conf
+  apt			debconf.conf	e2scrub.conf  gshadow	 issue	    ld.so.conf.d   lsb-release	opt	       profile	  rc3.d  resolv.conf  shells   sysctl.d
+  bash.bashrc		debian_version	environment   host.conf  issue.net  legal	   machine-id	os-release     profile.d  rc4.d  rmt	      skel     systemd
+bindresvport.blacklist	default		fstab	      hostname	 kernel     libaudit.conf  mke2fs.conf	pam.conf       rc0.d	  rc5.d  security     subgid   terminfo
+  ```
+  
+  So summarizing, an image is composed by differnt layers (read-only) that are stored in a specific path of your disk and are showed as an unique flat layer.
+  
+  You can use **docker history** to know which commands had been used to build an image (and so to add each different layers)
+  
+  ```
+  agrant@docker101:~$ docker history 1318b700e415
+  IMAGE          CREATED      CREATED BY                                      SIZE      COMMENT
+  1318b700e415   3 days ago   /bin/sh -c #(nop)  CMD ["bash"]                 0B        
+  <missing>      3 days ago   /bin/sh -c #(nop) ADD file:524e8d93ad65f08a0…   72.8MB 
+  ```
+  
+  the last one at the bottom is the root fs layer, on top of there's a layer to run a shell once an image will be run as container.
+  `CMD` is one of directive used in `Dockerfile` that will see later. So far you have just to know: if you images is too big, docker inspect
+  can be help you to know which layers are taking too space.
+  
+  
