@@ -266,14 +266,13 @@ bindresvport.blacklist	default		fstab	      hostname	 kernel     libaudit.conf  
   
   * [`FROM`](https://docs.docker.com/engine/reference/builder/#from): each image has a starting base image (defining its root fs). A valid Dockerfile **MUST START** with a **FROM** instruction
   * [`LABEL`](https://docs.docker.com/engine/reference/builder/#label): as documentation you can add some metadata with **LABEL** instruction
-  * [`RUN`](https://docs.docker.com/engine/reference/builder/#run): it runs commands during building phase and really important add a new layer inside the image.
+  * [`RUN`](https://docs.docker.com/engine/reference/builder/#run): it runs commands during building phase and (really important) it adds a new layer inside the image.
   * [`EXPOSE`](https://docs.docker.com/engine/reference/builder/#expose): it's a doc instruction informing who's reading that container will expose a specif port but it **DOES NOT EXPOSE** anything. Ports have been exposed once you run a container with **docker run**
   * [`CMD`](https://docs.docker.com/engine/reference/builder/#cmd): it provides a default command to run once spinning image up  as container. You should add only one **CMD** instruction in a Dockerfile and if more are present only the last one will be considered.
 
-So what are Dockergile does is: running some command to update ubuntu and intsall nc then informing us 8888 will be exposed at runtime and the defines running netcat on port 8888 as default command for each contianer based on this image.
+So what above Dockerfile does is: running some commands to update ubuntu and intsall nc then informing us 8888 will be exposed at runtime and the defines netcat on port 8888 as default command for each contianer based on this image.
 
-Ok, finally let'd build this image with **docker build**:
-Inside yout lab (`vagrant ssh`)
+Ok, finally let'd build this image with **docker build**, inside yout lab (`vagrant ssh`) run:
 
   ```
   cd /vagrant/examples/
@@ -283,9 +282,9 @@ Inside yout lab (`vagrant ssh`)
   docker build -t my-server .
   ```
   
-  * `-t`set name and tag of yout image, but remember you can alway re-tag later with **docker tag**
-  * `-f` we didn't use this options but it specify Dockerfile to use. if omitted docker will aspect a `Dockergile` with capital D
-  * `.` dot at the end is the **BUILD CONTEXT** and simplyfing is the location that contains file to be send to docker deamon. In other words all inside current dir `.` will be sent to docker deamon during building process and will be present inside the final image. You can use `.gitignore` to avoid some dir or specific file in the same way you use `.gitignore`  
+  * `-t`set name and tag of your image, but remember you can always re-tag later with **docker tag**
+  * `-f` we didn't use this option but it specifies Dockerfile to use. if omitted docker will expect a `Dockergile` with capital D
+  * `.` dot at the end is the **BUILD CONTEXT** and simplyfing it is the location that contains files to be sent to docker deamon. In other words all inside current dir `.` will be sent to docker deamon during building process and they will be present inside the final image. You can use `.dockerignore` to avoid some dir or specific files in the same way you use `.gitignore`  
   
   If building process went well, you should see `my-server` image running:
   
