@@ -297,3 +297,38 @@ Ok, finally let'd build this image with **docker build**, inside yout lab (`vagr
   ubuntu              14.04     13b66b487594   4 months ago     197MB
   ```
   
+### Running Containers
+
+We've finally our new shining image `my-server`, we're ready to spin a container up from that one.
+
+Inside your lab (`vagrant ssh`) run:
+
+  ```
+  docker run --name netcat -p 8888:8888 my-server
+  ```
+
+  * `--name`: give a nome to new container
+  * `p`: publish a container port to the host one (`container_port:host_port`)
+  
+  Congatulations, your first container is up and running but let's verify that with **docker ps**:
+  
+  ```
+  vagrant@docker101:~$ docker ps
+  CONTAINER ID   IMAGE       COMMAND        CREATED              STATUS              PORTS                    NAMES
+  17d52393e4bf   my-server   "nc -l 8888"   About a minute ago   Up About a minute   0.0.0.0:8888->8888/tcp   netcat
+  ```
+
+  so `netcat` is listening on port 8888 let's talk to it in this way:
+  
+  ```
+  vagrant@docker101:~$ netcat localhost 8888
+  ciao sei il mio server?
+  ```
+  
+  you should see the same output on the server side
+  
+  ```
+  vagrant@docker101:~$ docker run --name netcat -p 8888:8888 my-server
+  ciao sei il mio server?
+  ```
+  
