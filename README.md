@@ -236,3 +236,41 @@ bindresvport.blacklist	default		fstab	      hostname	 kernel     libaudit.conf  
   Status: Downloaded newer image for kinderp/my_ubuntu:latest
   docker.io/kinderp/my_ubuntu:latest
   ```
+  
+  ### Building Images
+  
+  You've learnt that images are composed by different layers and you can see all those with **docker history** showing you commands that created each single layer. 
+  
+  Let's now see how to create an image.   
+  In order to create an image you to have to build it specifying in a special file called `Dockerfile` all the commands that will add a new layer.
+  
+  A comprehensive list of all possible Dockerfile commands can be found [here](https://docs.docker.com/engine/reference/builder/)
+  
+  Let's start from an example as simple as possible:
+  
+  ```Dockerfile
+  FROM ubuntu
+
+  LABEL mainteiner="a.caristia@nephila.digital"
+ 
+  RUN apt update -y
+
+  RUN apt install -y netcat
+
+  EXPOSE 8888
+
+  CMD ["nc", "-l", "8888"]
+  ```
+  
+  You can find this file in `examples` dir.
+  
+  * [`FROM`](https://docs.docker.com/engine/reference/builder/#from): each image has a starting base image (defining its root fs). A valid Dockerfile **MUST START** with a **FROM** instruction
+  * [`LABEL`](https://docs.docker.com/engine/reference/builder/#label): as documentation you can add some metadata with **LABEL** instruction
+  * [`RUN`](https://docs.docker.com/engine/reference/builder/#run): it runs commands during building phase and really important add a new layer inside the image.
+  * [`EXPOSE`](https://docs.docker.com/engine/reference/builder/#expose): it's a doc instruction informing who's reading that container will expose a specif port but it **DOES NOT EXPOSE** anything. Ports have been exposed once you run a container with **docker run**
+  * [`CMD`](https://docs.docker.com/engine/reference/builder/#cmd): it provides a default command to run once spinning image up  as container. You should add only one **CMD** instruction in a Dockerfile and if more are present only the last one will be considered.
+
+So what are Dockergile does is: running some command to update ubuntu and intsall nc then informing us 8888 will be exposed at runtime and the defines running netcat on port 8888 as default command for each contianer based on this image.
+
+Ok, finally let'd build this image with **docker build**:
+
