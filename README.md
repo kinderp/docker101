@@ -72,3 +72,26 @@ TODO
 * The manifest is a JSON file explaining how all different layers fits together. 
 * An image is a bunch of layers that are stacked on top of each other. but it looks and feels like a unified file system, like a single flat image. 
 * Layer funcionality is really important for space disk consumption because in that way different containers can share layers with each others.
+
+#### Docker Images Commands
+
+Images are stored in registries on the web, so first af all you have to download image you need with **docker pull**.
+Inside your lab (`vagrant ssh`) let's run this:
+
+  ```
+  docker pull ubuntu
+  ```
+
+  You should see somthing like this:
+  
+  ```
+  vagrant@docker101:~$ docker pull ubuntu
+  Using default tag: latest
+  latest: Pulling from library/ubuntu
+  16ec32c2132b: Pull complete 
+  Digest: sha256:82becede498899ec668628e7cb0ad87b6e1c371cb8a1e597d83a47fac21d6af3
+  Status: Downloaded newer image for ubuntu:latest
+  docker.io/library/ubuntu:latest
+  ```
+  
+  Now you have ubuntu image in your disk
