@@ -108,7 +108,7 @@ Inside your lab (`vagrant ssh`) let's run this:
 
   As you can see above an image has a `TAG` and an `ID`. Id ofc identifies uniquely that image while tag is used to distinguish different versions (usually different releases of the code)
   
-  Once you have an image you can run containers from that.
+  Once you have an image you can run containers from that.(we'll later how to do)
   If you're wondering where these stuffs are stored in your disk, it depends on the storage driver: `/var/lib/docker` and the name of the driver, in my case:
   
   ```
@@ -117,7 +117,7 @@ Inside your lab (`vagrant ssh`) let's run this:
   drwx------ 3 root root 4096 Jul 30 07:17 8986a619617ea9f23266140e6e45ad8a25b0d443dca935dfe023e585c461ce3c
   ```
   
-  that one is the base (and only layer) in other words ubuntu root fs:
+  that one is the base (and only layer) in other words it's the ubuntu root fs:
   
   ```
   vagrant@docker101:~$ sudo ls /var/lib/docker/overlay2/8986a619617ea9f23266140e6e45ad8a25b0d443dca935dfe023e585c461ce3c/diff/etc
@@ -130,7 +130,7 @@ bindresvport.blacklist	default		fstab	      hostname	 kernel     libaudit.conf  
   
   So summarizing, an image is composed by differnt layers (read-only) that are stored in a specific path of your disk and are showed as an unique flat layer.
   
-  You can use **docker history** to know which commands had been used to build an image (and so to add each different layers)
+  You can use **docker history** to know which commands were used to build an image (and so to add each different layers)
   
   ```
   agrant@docker101:~$ docker history 1318b700e415
@@ -139,8 +139,8 @@ bindresvport.blacklist	default		fstab	      hostname	 kernel     libaudit.conf  
   <missing>      3 days ago   /bin/sh -c #(nop) ADD file:524e8d93ad65f08a0…   72.8MB 
   ```
   
-  the last one at the bottom is the root fs layer, on top of there's a layer to run a shell once an image will be run as container.
+  the last one at the bottom is the root fs layer, on top of it there's a layer (size 0B) to run a shell once an image will be run as container.
   `CMD` is one of directive used in `Dockerfile` that will see later. So far you have just to know: if you images is too big, docker inspect
-  can be help you to know which layers are taking too space.
+  can help you to know which layers are taking too space.
   
   
