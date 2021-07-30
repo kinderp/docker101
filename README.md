@@ -143,4 +143,4 @@ bindresvport.blacklist	default		fstab	      hostname	 kernel     libaudit.conf  
   `CMD` is one of directive used in `Dockerfile` that will see later. So far you have just to know: if you images is too big, docker inspect
   can help you to know which layers are taking too space.
   
-  
+  Remember if you need more specific infos about an image you can use **docker inspect <image_id>**. 
