@@ -456,7 +456,133 @@ Let's suppose we have a bash shell gotten as you saw in the previous chapter, wh
   
   Our layer has gone, we've lost data :(
   
+    
+ ### Volumes
+ 
+ What we've lerant so fare is: a container gets its non persistent storage managed by storage driver but you loose all after removing the container.
+ In order to obtain persisten storage you have to use volumes.
+ A volume is an external storage that you can attach to a container and because of it's external to a container it persists after you remove container at which it's attached.
+ 
+ You can create a volume before running a container with **docker volume crete**
+ 
+   ```
+   vagrant@docker101:~$ docker volume create one
+   one
+   ```
+   
+And showing all existing volumes with **docker volume ls**
+
+  ```
+  vagrant@docker101:~$ docker volume ls
+  DRIVER    VOLUME NAME
+  local     one
+  ```
   
+You can get more infos about volumes you created with **docker volume inspect**, for example you can get local path where it's saved
+
+  ```
+  vagrant@docker101:~$ docker volume inspect one
+  [
+      {
+          "CreatedAt": "2021-08-01T15:53:48Z",
+          "Driver": "local",
+          "Labels": {},
+          "Mountpoint": "/var/lib/docker/volumes/one/_data",
+          "Name": "one",
+          "Options": {},
+          "Scope": "local"
+      }
+  ]
+  ```
   
+And yon can delete a volume with **docker volume rm**
+
+  ```
+  vagrant@docker101:~$ docker volume rm one
+  one
+
+  vagrant@docker101:~$ docker volume ls
+  DRIVER    VOLUME NAME
+  ```
+
+As you maybe already noticed volumes are indipendent objects and they are related with a container just during time they are attach to a container. After the container dies a volume continue to exist and can be used/attached to a new container provind a good way for persistent storage.
+
+#### Attaching a volume
+
+Let's see now how to attach a volume to a container using **docker run**. In otder to do that we can use `--mount` option specifying the source (the volume name) and the target (the mountpoint inside container's fs)
+
+  ```
+  vagrant@docker101:~$ docker run -dit --name attach_volume --mount source=my_volume,target=/my_persistent_dir ubuntu
+  dd1d107be88e6f3c4e9a88e838e6f6979812d99930b29b6e5c9460c7bc7ccc2b
+  ```
+
+volume `my_volume` will be created if it does not exist.
+
+A new container named `attach_volume` exists and a newly created volume `my_volume` has been created and attached to it
+
+  ```
+  vagrant@docker101:~$ docker ps
+  CONTAINER ID   IMAGE     COMMAND   CREATED              STATUS              PORTS     NAMES
+  dd1d107be88e   ubuntu    "bash"    About a minute ago   Up About a minute             attach_volume
+
+  vagrant@docker101:~$ docker volume ls
+  DRIVER    VOLUME NAME
+  local     my_volume
+  vagrant@docker101:~$ 
+  ```
   
+  Not let's try to write something inside `my_persistent_dir` then remove the container and re-attach the same volume to a new one
+  
+  ```
+  vagrant@docker101:~$ docker exec -it dd1d107be88e bash
+  root@dd1d107be88e:/# echo "i will survive" > /my_persistent_dir/test.txt
+  root@dd1d107be88e:/# cat /my_persistent_dir/test.txt 
+  i will survive
+  ```
+  
+  Remote all
+  
+  ```
+  vagrant@docker101:~$ docker ps
+  CONTAINER ID   IMAGE     COMMAND   CREATED          STATUS          PORTS     NAMES
+  dd1d107be88e   ubuntu    "bash"    15 minutes ago   Up 15 minutes             attach_volume
+
+  vagrant@docker101:~$ docker rm dd1d107be88e
+  Error response from daemon: You cannot remove a running container dd1d107be88e6f3c4e9a88e838e6f6979812d99930b29b6e5c9460c7bc7ccc2b. Stop the container before  attempting removal or force remove
+  ```
+  
+  Dokcer does not permit you to remove a container with an attached volume, that's good but this time let's force docker to do that in this way:
+  
+  ```
+  vagrant@docker101:~$ docker rm -f dd1d107be88e
+  dd1d107be88e
+
+  vagrant@docker101:~$ docker ps
+  CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+  ```
+  
+  Container is died, let's create a new one with the same old volume attached to it
+  
+  ```
+  vagrant@docker101:~$ docker run -dit --name new_container --mount source=my_volume,target=/whatever alpine
+  Unable to find image 'alpine:latest' locally
+  latest: Pulling from library/alpine
+  5843afab3874: Pull complete 
+  Digest: sha256:adab3844f497ab9171f070d4cae4114b5aec565ac772e2f2579405b78be67c96
+  Status: Downloaded newer image for alpine:latest
+  240af3f227538d08f1ff265d5acfc242d6548d5ee7680a15357836c9ae0225c8
+  ```
+  
+  As you can see above you can change `target` mountpoint, container name and image, result is the same our `my_volyme` volume will be attached to the new container, let's verify it.
+  
+  ```
+  vagrant@docker101:~$ docker ps
+  CONTAINER ID   IMAGE     COMMAND     CREATED         STATUS         PORTS     NAMES
+  240af3f22753   alpine    "/bin/sh"   2 minutes ago   Up 2 minutes             new_container
+
+  vagrant@docker101:~$ docker exec 240af3f22753 cat /whatever/test.txt
+  i will survive
+  ```
+
+
   
