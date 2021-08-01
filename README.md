@@ -584,5 +584,94 @@ A new container named `attach_volume` exists and a newly created volume `my_volu
   i will survive
   ```
 
+### Let's dirty our hands with volumes
+  
+When you think about volumes and persistent data you probably associate it with a database.
+Let's try to run a postgres container attaching pgdata folder to an external volume in otder to be able to make indipendet our data to the lifecycle of the container.
 
+  ```
+  vagrant@docker101:~$ docker volume create pgdata
+  pgdata
+
+  vagrant@docker101:~$ docker volume ls
+  DRIVER    VOLUME NAME
+  local     my_volume
+  local     pgdata
+
+  ```
+
+  ```
+  vagrant@docker101:~$ docker run -it --rm -v pgdata:/var/lib/postgresql/data -e POSTGRES_PASSWORD=mysecretpassword postgres
+  ```
+  
+  ```
+  vagrant@docker101:~$ docker ps|grep postgres
+  e3d0985a6993   postgres   "docker-entrypoint.s…"   2 minutes ago    Up 2 minutes    5432/tcp   cool_engelbart
+  ```
+  
+  Did you notice? We used another options `-v` to create/attach a container in `run` command. You can use both `--mount` or `-v`, [here](https://docs.docker.com/storage/volumes/#choose-the--v-or---mount-flag) some infos about this double options
+  
+  Now we wanna try to connect to postgres but wait a second we didn't open any port (`-p` options in `docker run` command) so we can't use `psql` from our local machine because there's not mapping between a local port and container one. We'll it do later but for now we can just start a new container and run from there `psql`. 
+  
+  ```
+  vagrant@docker101:~$ docker run -it --rm postgres bash
+  root@f7da5d8f4580:/#
+  ```
+  
+  ```
+  vagrant@docker101:~$ docker run -it --rm postgres bash
+  root@f7da5d8f4580:/# psql -h cool_engelbart -U postgres
+  psql: error: could not connect to server: Connection refused
+	  Is the server running on host "cool_engelbart" (127.0.0.1) and accepting
+	  TCP/IP connections on port 5432?
+  root@f7da5d8f4580:/# psql -h 172.17.0.3 -U postgres
+  Password for user postgres: 
+  psql (13.3 (Debian 13.3-1.pgdg100+1))
+  Type "help" for help.
+
+  postgres=# 
+  ```
+  
+  Cool, but wait a second where did we get postgres ip to connect to?
+  I used **docker inspect** to retrieve ip of running postgres container in this way:
+
+  ```
+  vagrant@docker101:~$ docker ps|grep postgres
+  e3d0985a6993   postgres   "docker-entrypoint.s…"   23 minutes ago   Up 23 minutes   5432/tcp   cool_engelbart
+
+  vagrant@docker101:~$ docker inspect e3d0985a6993|grep IPAddress
+            "SecondaryIPAddresses": null,
+            "IPAddress": "172.17.0.3",
+                    "IPAddress": "172.17.0.3",
+
+  ```
+  
+  We're happy but not too much because we can't connect to postgres directly from our local machine, in order to do that we have to remove running container and use `-p` option to bint local port to a conatiner one. We won't losse our data because pgdata dir has been attached to an external volume. 
+  
+  ```bash
+  vagrant@docker101:~$ docker rm -f $(docker ps -q)
+  e3d0985a6993
+  240af3f22753
+  
+  vagrant@docker101:~$ docker ps
+  CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+  
+  vagrant@docker101:~$ docker run -it --rm -p 6789:5432 --mount source=pgdata,target=/var/lib/postgresql/data -e POSTGRES_PASSWORD=mysecretpassword postgres
+  
+  vagrant@docker101:~$ sudo apt install -y postgresql-client
+
+  vagrant@docker101:~$ psql -h localhost -p 6789 -U postgres
+  Password for user postgres: 
+  psql (12.7 (Ubuntu 12.7-0ubuntu0.20.04.1), server 13.3 (Debian 13.3-1.pgdg100+1))
+  WARNING: psql major version 12, server major version 13.
+         Some psql features might not work.
+  Type "help" for help.
+
+  postgres=#
+  ```
+  
+  First of all `docker rm -f $(docker ps -q)` it's a useful trick to remove all the running containers.
+  In `psql -h localhost -p 6789 -U postgres` we connected to running postgres container using localhost and the number of mapped port used in `-p` option of run command. It worked but take in consideration that postgres container is attached to a docker network and it has it own ip (as you've seen before) so if we'd have retrieved that ip with `docker inspect 30b3896cc16b|grep IPAddress` and then `psql -h 172.17.0.2 -p 5432 -U postgres`. We'll talk about docker network in the next chapter
+  
+  
   
