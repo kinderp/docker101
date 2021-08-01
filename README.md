@@ -2,7 +2,8 @@
 
 ### Playground
 
-We'll use vagrant in order to obtain a clean environment as lab where we'll be free to play with docker without any fear to break our dev env. 
+We'll use vagrant in order to obtain a clean environment as lab where we'll be free to play with docker without any fear to break our dev env.
+
 So before doing anything you shuold:
 
 * Install `virtualbox`
@@ -64,13 +65,12 @@ TODO
 
 * An image is a read‑only template for creating containers. 
 * It contains all the code to run an application. 
-* Images are build‑time constructs while containers are runtime contropart. 
+* Images are build‑time constructs while containers are its runtime contropart. 
 * A container is a running image. If it helps you, it's something similar to relathionship between a program and a process. 
 * Deeping dive into image we can say an image is composed by a bunch of layer (read-only) stacked together but trasparent to us thanks to kernel union filesystem feature
-* So for simplicity you can think of union fs as a bunch of read‑only file systems or block devices with a writeable layer on top, and presenting them to the system as a unique layer.
+* So for simplicity you can think of union fs as a bunch of read‑only file systems or block devices with a writeable layer on top (created only once a container is spinned up), and presenting them to the system as a unique layer.
 * In order to track which layers belong to an image a Manifest file is used.
 * The manifest is a JSON file explaining how all different layers fits together. 
-* An image is a bunch of layers that are stacked on top of each other. but it looks and feels like a unified file system, like a single flat image. 
 * Layer funcionality is really important for space disk consumption because in that way different containers can share layers with each others.
 
 #### Docker Images Commands
@@ -94,22 +94,19 @@ Inside your lab (`vagrant ssh`) let's run this:
   docker.io/library/ubuntu:latest
   ```
   
-  Now you have ubuntu image in your disk and you can verify that's true just running **docker images ls** or simply **docker images**
+  Now you have an ubuntu image in your disk and you can verify it just running **docker image ls** or simply **docker images**
   
-  ```
-  docker images ls
-  ```
-  
+ 
   ```
   vagrant@docker101:~$ docker images
   REPOSITORY   TAG       IMAGE ID       CREATED      SIZE
   ubuntu       latest    1318b700e415   3 days ago   72.8MB
   ```
 
-  As you can see above an image has a `TAG` and an `ID`. Id ofc identifies uniquely that image while tag is used to distinguish different versions (usually different releases of the code)
+  As you can see above an image has a `TAG` and an `ID`. Id identifies uniquely an image while tag is used to distinguish different versions (usually different releases of the code)
   
-  Once you have an image you can run containers from that.(we'll later how to do)
-  If you're wondering where these stuffs are stored in your disk, it depends on the storage driver: `/var/lib/docker` and the name of the driver, in my case:
+  Once you have an image you can run containers from that.(we'll see later how to do)
+  If you're wondering where these stuffs are stored in your disk, it depends on the storage driver: `/var/lib/docker`, in my case:
   
   ```
   vagrant@docker101:~$ sudo ls -l /var/lib/docker/overlay2/
@@ -117,7 +114,7 @@ Inside your lab (`vagrant ssh`) let's run this:
   drwx------ 3 root root 4096 Jul 30 07:17 8986a619617ea9f23266140e6e45ad8a25b0d443dca935dfe023e585c461ce3c
   ```
   
-  that one is the base (and only layer) in other words it's the ubuntu root fs:
+  that one above is the base (and only layer) or in other words it's the ubuntu root fs:
   
   ```
   vagrant@docker101:~$ sudo ls /var/lib/docker/overlay2/8986a619617ea9f23266140e6e45ad8a25b0d443dca935dfe023e585c461ce3c/diff/etc
@@ -128,9 +125,9 @@ Inside your lab (`vagrant ssh`) let's run this:
 bindresvport.blacklist	default		fstab	      hostname	 kernel     libaudit.conf  mke2fs.conf	pam.conf       rc0.d	  rc5.d  security     subgid   terminfo
   ```
   
-  So summarizing, an image is composed by differnt layers (read-only) that are stored in a specific path of your disk and are showed as an unique flat layer.
+  So summarizing, an image is composed by differnt layers (read-only) that are stored in a specific path of your disk but are showed as an unique flat layer.
   
-  You can use **docker history** to know which commands were used to build an image (and so to add each different layers)
+  You can use **docker history** to know which commands were used to build an image (and so each different layers)
   
   ```
   agrant@docker101:~$ docker history 1318b700e415
@@ -140,7 +137,7 @@ bindresvport.blacklist	default		fstab	      hostname	 kernel     libaudit.conf  
   ```
   
   the last one at the bottom is the root fs layer, on top of it there's a layer (size 0B) to run a shell once an image will be run as container.
-  `CMD` is one of directive used in `Dockerfile` that will see later. So far you have just to know: if you images is too big, docker inspect
+  `CMD` is one of directive used in `Dockerfile` that will see later. So far you have just to know: if your images is too big, docker inspect
   can help you to know which layers are taking too space.
   
   Remember if you need more specific infos about an image you can use **docker inspect <image_id>**. 
