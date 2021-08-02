@@ -842,3 +842,10 @@ There's a README file with all the insturctions to load this env. Briefly, in yo
   ```
 * run `docker-compose up`
 * load some data `sudo chmod u+x ./setup.sh && ./setup.sh`
+
+If you take a look at `docker-compose.yaml in `/vagrant/`examples/compose` you'll notice 4 top level nodes:
+
+* `version`: it defines which version of docker-compose.yaml we wanna use
+* `services`: it defines which services will be part of our application (`backend`, `db`, `proxy`)
+* `volumes`: it defines volumes you wanna attach to rout service containers
+* `network`
