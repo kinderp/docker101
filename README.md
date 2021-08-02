@@ -707,6 +707,85 @@ Bridge network is just an isolated bridge scoped to a single host while overlay 
 
 The only issue with overlay networks is that they are containers only network, if you need to connect containers to VM(s) or physical servers you have to use `macvlan` networks. In a macvlan network containers have its ip and mac address on the existing network and that permits containers to be visivile in your lan without any bridge or port mapping.
 
+After this breif digression about networks types in docker let's inspect our default bridge network with **docker network inspect**
 
+  ```
+  vagrant@docker101:~$ docker network inspect bridge
+  [
+    {
+        "Name": "bridge",
+        "Id": "fc58c3aa85440af16c381a7bfe975b2ff81fab1b814ed91ee53683aaf4d3a334",
+        "Created": "2021-07-30T06:46:37.545472917Z",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": null,
+            "Config": [
+                {
+                    "Subnet": "172.17.0.0/16",
+                    "Gateway": "172.17.0.1"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Containers": {},
+        "Options": {
+            "com.docker.network.bridge.default_bridge": "true",
+            "com.docker.network.bridge.enable_icc": "true",
+            "com.docker.network.bridge.enable_ip_masquerade": "true",
+            "com.docker.network.bridge.host_binding_ipv4": "0.0.0.0",
+            "com.docker.network.bridge.name": "docker0",
+            "com.docker.network.driver.mtu": "1500"
+        },
+        "Labels": {}
+    }
+]
 
+  ```
+  
+  Cool, it has its subnet (`"172.17.0.0/16`) gateway (`172.17.0.`) but no containers.
+  
+  Let's try to add a new container to the default bridge network
+  
+  ```
+  vagrant@docker101:~$ docker run -d --rm --name network_container ubuntu sleep 1000
+  1f929596d974e02c5ceb48c2a357c3eef435305962bebb8f11adeae8d124610b
+  
+  vagrant@docker101:~$ docker ps
+  CONTAINER ID   IMAGE     COMMAND        CREATED         STATUS         PORTS     NAMES
+  1f929596d974   ubuntu    "sleep 1000"   5 seconds ago   Up 5 seconds             network_container
+  
+  vagrant@docker101:~$ docker network inspect bridge|grep -A 4 -B 2 network_container 
+        "Containers": {
+            "1f929596d974e02c5ceb48c2a357c3eef435305962bebb8f11adeae8d124610b": {
+                "Name": "network_container",
+                "EndpointID": "7b7fddaf4d4e26e78671c5ca4f2012d31c4c00f1468dd07bfa661d3cff3a6475",
+                "MacAddress": "02:42:ac:11:00:02",
+                "IPv4Address": "172.17.0.2/16",
+                "IPv6Address": ""
 
+  ```
+  
+  
+And you can ping container as any host in your lan
+
+  ```
+  vagrant@docker101:~$ ping 172.17.0.2
+  PING 172.17.0.2 (172.17.0.2) 56(84) bytes of data.
+  64 bytes from 172.17.0.2: icmp_seq=1 ttl=64 time=0.167 ms
+  64 bytes from 172.17.0.2: icmp_seq=2 ttl=64 time=0.103 ms
+  ^C
+  --- 172.17.0.2 ping statistics ---
+  2 packets transmitted, 2 received, 0% packet loss, time 1001ms
+  rtt min/avg/max/mdev = 0.103/0.135/0.167/0.032 ms
+
+  ```
+  
