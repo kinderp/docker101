@@ -671,4 +671,30 @@ Let's try to run a postgres container attaching pgdata folder to an external vol
   In `psql -h localhost -p 6789 -U postgres` we connected to running postgres container using localhost and the number of mapped port used in `-p` option of run command. It worked but take in consideration that postgres container is attached to a docker network and it has it own ip (as you've seen before) so I could obtain the same result even if we'd have retrieved that ip with `docker inspect 30b3896cc16b|grep IPAddress` and then `psql -h 172.17.0.2 -p 5432 -U postgres`. We'll talk about docker network in the next chapter
   
   
+ ### Docker Network
+ 
+ In our discussion we've already mentioned docker networks, you've already seen that each docker container has its own ip. and you can get this ip running **docker inspect**.
+ 
+ Docker has a series of specific commands for managing networks of containers: **docker network**.
+ 
+ As first command, we can list existing networks with **docker network ls**.
+ 
+ So inside your lab (`vagrant ssh`):
+ 
+   ```
+   vagrant@docker101:~$ docker network ls
+   NETWORK ID     NAME      DRIVER    SCOPE
+   fc58c3aa8544   bridge    bridge    local
+   fce7f90499c1   host      host      local
+   757ad1104099   none      null      local
+   ```
+
+Let's see in details the first one named: `brigde`, its name is not casual, as you maybe know bridges are network devices working at layer 2 connecting two Ethernet segments together. Linux kernel (if bridging is enabled) can create/mange virtual bridges usually providing a cli interface to sysadmin through `brctl` command. If you run in your lab:
+
+  ```
+  vagrant@docker101:~$ brctl show
+  bridge name	bridge id		STP enabled	interfaces
+  docker0		8000.0242e47410f2	no		vethf0aa088
+  ```
   
+docker during its installation has created `docker0` bridge for you and 
