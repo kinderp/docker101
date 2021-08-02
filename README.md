@@ -671,4 +671,156 @@ Let's try to run a postgres container attaching pgdata folder to an external vol
   In `psql -h localhost -p 6789 -U postgres` we connected to running postgres container using localhost and the number of mapped port used in `-p` option of run command. It worked but take in consideration that postgres container is attached to a docker network and it has it own ip (as you've seen before) so I could obtain the same result even if we'd have retrieved that ip with `docker inspect 30b3896cc16b|grep IPAddress` and then `psql -h 172.17.0.2 -p 5432 -U postgres`. We'll talk about docker network in the next chapter
   
   
+ ### Docker Network
+ 
+ In our discussion we've already mentioned docker networks, you've already seen that each docker container has its own ip. and you can get this ip running **docker inspect**.
+ 
+ Docker has a series of specific commands for managing networks of containers: **docker network**.
+ 
+ As first command, we can list existing networks with **docker network ls**.
+ 
+ So inside your lab (`vagrant ssh`):
+ 
+   ```
+   vagrant@docker101:~$ docker network ls
+   NETWORK ID     NAME      DRIVER    SCOPE
+   fc58c3aa8544   bridge    bridge    local
+   fce7f90499c1   host      host      local
+   757ad1104099   none      null      local
+   ```
+
+Let's see in details the first one named: `brigde`, its name is not casual, as you maybe know bridges are network devices working at layer 2 connecting two Ethernet segments together. Linux kernel (if bridging is enabled) can create/mange virtual bridges usually providing a cli interface to sysadmin through `brctl` command. If you run in your lab:
+
+  ```
+  vagrant@docker101:~$ brctl show
+  bridge name	bridge id		STP enabled	interfaces
+  docker0		8000.0242e47410f2	no		vethf0aa088
+  ```
   
+docker during its installation has created `docker0` bridge for you and it will be used as device for `bridge` networks.
+Bridge is the dafault network in docker and every new containers will be added in this network but ofc you can always specify a different network for a new container.
+Bridge networks have a local scope (`SCOPE` column in `docker network ls`) that means they can connect containers only inside a single host, furthermore a bridge network is isolated: a container inside a bridge network can't talk with another container in a different bridge network even if they resides in the same host.
+If you wanna connect to a container inside a bridge network from the outside workd you have to use port mapping as describe in the previous chapters.
+
+If you need to connect each others containers in different hosts you have to use `overlay` networks, these kind of networks are multiple hosts networks.
+Bridge network is just an isolated bridge scoped to a single host while overlay is a single layer2 bridge network spanning multiple hosts and it doesn't matter if hosts are inside different (physical network) containers will stay in the same (virtual) network.
+
+The only issue with overlay networks is that they are containers only network, if you need to connect containers to VM(s) or physical servers you have to use `macvlan` networks. In a macvlan network containers have its ip and mac address on the existing network and that permits containers to be visivile in your lan without any bridge or port mapping.
+
+After this breif digression about networks types in docker let's inspect our default bridge network with **docker network inspect**
+
+  ```
+  vagrant@docker101:~$ docker network inspect bridge
+  [
+    {
+        "Name": "bridge",
+        "Id": "fc58c3aa85440af16c381a7bfe975b2ff81fab1b814ed91ee53683aaf4d3a334",
+        "Created": "2021-07-30T06:46:37.545472917Z",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": null,
+            "Config": [
+                {
+                    "Subnet": "172.17.0.0/16",
+                    "Gateway": "172.17.0.1"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Containers": {},
+        "Options": {
+            "com.docker.network.bridge.default_bridge": "true",
+            "com.docker.network.bridge.enable_icc": "true",
+            "com.docker.network.bridge.enable_ip_masquerade": "true",
+            "com.docker.network.bridge.host_binding_ipv4": "0.0.0.0",
+            "com.docker.network.bridge.name": "docker0",
+            "com.docker.network.driver.mtu": "1500"
+        },
+        "Labels": {}
+    }
+]
+
+  ```
+  
+  Cool, it has its subnet (`"172.17.0.0/16`) gateway (`172.17.0.`) but no containers.
+  
+  Let's try to add a new container to the default bridge network
+  
+  ```
+  vagrant@docker101:~$ docker run -d --rm --name network_container ubuntu sleep 1000
+  1f929596d974e02c5ceb48c2a357c3eef435305962bebb8f11adeae8d124610b
+  
+  vagrant@docker101:~$ docker ps
+  CONTAINER ID   IMAGE     COMMAND        CREATED         STATUS         PORTS     NAMES
+  1f929596d974   ubuntu    "sleep 1000"   5 seconds ago   Up 5 seconds             network_container
+  
+  vagrant@docker101:~$ docker network inspect bridge|grep -A 4 -B 2 network_container 
+        "Containers": {
+            "1f929596d974e02c5ceb48c2a357c3eef435305962bebb8f11adeae8d124610b": {
+                "Name": "network_container",
+                "EndpointID": "7b7fddaf4d4e26e78671c5ca4f2012d31c4c00f1468dd07bfa661d3cff3a6475",
+                "MacAddress": "02:42:ac:11:00:02",
+                "IPv4Address": "172.17.0.2/16",
+                "IPv6Address": ""
+
+  ```
+  
+  
+And you can ping container as any host in your lan
+
+  ```
+  vagrant@docker101:~$ ping 172.17.0.2
+  PING 172.17.0.2 (172.17.0.2) 56(84) bytes of data.
+  64 bytes from 172.17.0.2: icmp_seq=1 ttl=64 time=0.167 ms
+  64 bytes from 172.17.0.2: icmp_seq=2 ttl=64 time=0.103 ms
+  ^C
+  --- 172.17.0.2 ping statistics ---
+  2 packets transmitted, 2 received, 0% packet loss, time 1001ms
+  rtt min/avg/max/mdev = 0.103/0.135/0.167/0.032 ms
+
+  ```
+  
+It works even with a different new network, so let's create a new bridge network:
+
+  ```
+  vagrant@docker101:~$ docker network create --driver bridge my_network
+  4032cd4d89fedf783f36fa74ad2b7f6214a0b415133e1aea4a5299451b0cb5ae
+
+  vagrant@docker101:~$ docker network ls|grep my_network
+  4032cd4d89fe   my_network   bridge    local
+
+  vagrant@docker101:~$ docker run -d --rm --network my_network --name container_in_my_network alpine sleep 1000
+  60a137aa23c7b1e5c42a5e54019a1d50cb7eda68f2701cb100a546f713f33aaa
+
+  vagrant@docker101:~$ docker network inspect my_network|grep -A 4 -B 2 in_my_network
+        "Containers": {
+            "60a137aa23c7b1e5c42a5e54019a1d50cb7eda68f2701cb100a546f713f33aaa": {
+                "Name": "container_in_my_network",
+                "EndpointID": "52cb1815755aedd0a9db3353b7fb9b55a6a5fb03563ac46e0bb03066455d4edd",
+                "MacAddress": "02:42:ac:12:00:02",
+                "IPv4Address": "172.18.0.2/16",
+                "IPv6Address": ""
+
+  ```
+  
+ `--driver` it's not necessary in this case becasue `bridge` is the default value but it must be used to create `overlay`, `macvlan` or `ipvlan` networks.
+ 
+ `
+## Docker Compose
+
+In this chapther will talk about `docker-compose`, if you followed so far you know how to build images, run containers from it and use volumes and networks for storage and communication.
+
+In a real develoment environment modern applicaton are composed by different services and each one needs to be wrapped in a different container. That means the more your application grows the more the number of containers to be managed grows. It's not possible start/stop/build manually each contianer everytime if your application has more than 2/3 servies.
+
+Docker compose help us to solve this issue, you can think to it as an orchestrator to manage containers.
+With `docker-compose` you can build/run/stop/stop all the services belonging to your application in a single command.
+
