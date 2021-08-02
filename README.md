@@ -15,7 +15,7 @@ So before doing anything you shuold:
 * move to `ubuntu` dir: `cd docker101/playground/ubuntu/`
 * Run: `vagrant up` and wait
 * Ssh into vm: `vagrant ssh`
-* Check if docker has been provisioned correctly
+* Check if docker has been correctly provisioned
    * `systemctl status docker`
    * `docker ps`
 
@@ -67,10 +67,10 @@ TODO
 * It contains all the code to run an application. 
 * Images are build‑time constructs while containers are its runtime contropart. 
 * A container is a running image. If it helps you, it's something similar to relathionship between a program and a process. 
-* Deeping dive into image we can say an image is composed by a bunch of layer (read-only) stacked together but trasparent to us thanks to kernel union filesystem feature
+* Deeping dive into image we can say an image is composed by a bunch of layer (read-only) stacked together but trasparent to us thanks to kernel `union filesystem` feature
 * So for simplicity you can think of union fs as a bunch of read‑only file systems or block devices with a writeable layer on top (created only once a container is spinned up), and presenting them to the system as a unique layer.
 * In order to track which layers belong to an image a Manifest file is used.
-* The manifest is a JSON file explaining how all different layers fits together. 
+* The manifest is a JSON file explaining how all different layers fit together. 
 * Layer funcionality is really important for space disk consumption because in that way different containers can share layers with each others.
 
 #### Docker Images Commands
@@ -103,9 +103,12 @@ Inside your lab (`vagrant ssh`) let's run this:
   ubuntu       latest    1318b700e415   3 days ago   72.8MB
   ```
 
-  As you can see above an image has a `TAG` and an `ID`. Id identifies uniquely an image while tag is used to distinguish different versions (usually different releases of the code)
+  As you can see above an image has a `TAG` and an `ID`. 
+
+  Id identifies uniquely an image while tag is used to distinguish different versions (usually different releases of the code)
   
-  Once you have an image you can run containers from that.(we'll see later how to do)
+  Once you have an image you can run containers from that (we'll see later how to do)
+
   If you're wondering where these stuffs are stored in your disk, it depends on the storage driver: `/var/lib/docker`, in my case:
   
   ```
@@ -136,8 +139,8 @@ bindresvport.blacklist	default		fstab	      hostname	 kernel     libaudit.conf  
   <missing>      3 days ago   /bin/sh -c #(nop) ADD file:524e8d93ad65f08a0…   72.8MB 
   ```
   
-  the last one at the bottom is the root fs layer, on top of it there's a layer (size 0B) to run a shell once an image will be run as container.
-  `CMD` is one of directive used in `Dockerfile` that will see later. So far you have just to know: if your images is too big, docker inspect
+  the last one at the bottom is the root fs layer, on top of it there's a layer (size 0B) to execute a shell once an image will be run as container.
+  `CMD` is one of directives used in `Dockerfile` that will see later. So far you have just to remember: if your images is too big, **docker history**
   can help you to know which layers are taking too space.
   
   Remember if you need more specific infos about an image you can use **docker inspect <image_id>**. 
@@ -178,7 +181,7 @@ bindresvport.blacklist	default		fstab	      hostname	 kernel     libaudit.conf  
   Login Succeeded
   ```
   
-  So now let's suppose i want to push ubutu image i've previously pulled to my dckerhub account. Because of images' coordinates depends on repo name (in this case my account on dockerhub) I have to rename my image running **docker tag**
+  So now let's suppose i want to push ubutu image (that one i've previously pulled in) to my dckerhub account. Because of images' coordinates depends on repo name (in this case my account on dockerhub) I have to rename my image running **docker tag**
   
   ```
   vagrant@docker101:~$ docker tag ubuntu kinderp/my_ubuntu
@@ -214,7 +217,7 @@ bindresvport.blacklist	default		fstab	      hostname	 kernel     libaudit.conf  
   Untagged: kinderp/my_ubuntu@sha256:1e48201ccc2ab83afc435394b3bf70af0fa0055215c1e26a5da9b50a1ae367c9
   ```
   
-  then verify it has been removed
+  and then verify that it has been removed
   
   ```
   vagrant@docker101:~$ docker image ls
@@ -236,10 +239,12 @@ bindresvport.blacklist	default		fstab	      hostname	 kernel     libaudit.conf  
   
   ### Building Images
   
-  You've learnt that images are composed by different layers and you can see all those with **docker history** showing you commands that created each single layer. 
+  You've learnt that images are composed by different layers and you can see all those with **docker history** showing you commands that added each single layer
   
-  Let's now see how to create an image.   
+  Let's now see how to create an image   
+
   In order to create an image you to have to build it specifying in a special file called `Dockerfile` all the commands that will add a new layer.
+  Some commands don't add any layers (you'll see 0B for that virtual layer) anyway.
   
   A comprehensive list of all possible Dockerfile commands can be found [here](https://docs.docker.com/engine/reference/builder/)
   
@@ -265,9 +270,9 @@ bindresvport.blacklist	default		fstab	      hostname	 kernel     libaudit.conf  
   * [`LABEL`](https://docs.docker.com/engine/reference/builder/#label): as documentation you can add some metadata with **LABEL** instruction
   * [`RUN`](https://docs.docker.com/engine/reference/builder/#run): it runs commands during building phase and (really important) it adds a new layer inside the image.
   * [`EXPOSE`](https://docs.docker.com/engine/reference/builder/#expose): it's a doc instruction informing who's reading that container will expose a specif port but it **DOES NOT EXPOSE** anything. Ports have been exposed once you run a container with **docker run**
-  * [`CMD`](https://docs.docker.com/engine/reference/builder/#cmd): it provides a default command to run once spinning image up  as container. You should add only one **CMD** instruction in a Dockerfile and if more are present only the last one will be considered.
+  * [`CMD`](https://docs.docker.com/engine/reference/builder/#cmd): it provides a default command to be executed once spinning image up  as container. You should add only one **CMD** instruction in a Dockerfile and if more than one are present only the last one will be considered.
 
-So what above Dockerfile does is: running some commands to update ubuntu and intsall nc then informing us 8888 will be exposed at runtime and the defines netcat on port 8888 as default command for each contianer based on this image.
+So what above Dockerfile does is: running some commands to update ubuntu and intsall nc then informing us 8888 will be exposed at runtime and then it sets netcat on port 8888 as default command for each contianer based on this image.
 
 Ok, finally let'd build this image with **docker build**, inside yout lab (`vagrant ssh`) run:
 
@@ -280,10 +285,10 @@ Ok, finally let'd build this image with **docker build**, inside yout lab (`vagr
   ```
   
   * `-t`set name and tag of your image, but remember you can always re-tag later with **docker tag**
-  * `-f` we didn't use this option but it specifies Dockerfile to use. if omitted docker will expect a `Dockergile` with capital D
-  * `.` dot at the end is the **BUILD CONTEXT** and simplyfing it is the location that contains files to be sent to docker deamon. In other words all inside current dir `.` will be sent to docker deamon during building process and they will be present inside the final image. You can use `.dockerignore` to avoid some dir or specific files in the same way you use `.gitignore`  
+  * `-f` we didn't use this option but it specifies the filename of Dockerfile to use. if omitted docker will expect a filename named as: `Dockergile` with capital D
+  * `.` dot at the end is the **BUILD CONTEXT** and simplyfing it is the location that contains files to be sent to docker deamon. In other words everything inside current dir `.` will be sent to docker deamon during building process and they will be present inside the final image. You can use `.dockerignore` to avoid including some dir or specific files in the same way you use `.gitignore`  
   
-  If building process went well, you should see `my-server` image running:
+  If building process went well, you should see `my-server` image:
   
   ```
   vagrant@docker101:/vagrant/examples$ docker image ls
@@ -305,7 +310,7 @@ Inside your lab (`vagrant ssh`) run:
   ```
 
   * `--name`: give a nome to new container
-  * `p`: publish a container port to the host one (`container_port:host_port`)
+  * `-p`: publish a container port to the host one (`container_port:host_port`). if you remember we used `EXPOSE` in `Dockerfile` to document we'll expose 8888 in run command. A port is expoed only in run command (running phase) not before inside a Dockerfile (building phase).
   
   Congatulations, your first container is up and running but let's verify that with **docker ps**:
   
@@ -358,7 +363,7 @@ But now it's time to die (cit.), let's run:
 
 ### Starting Containers
 
-You can restart a stopped container with **docker start** knowing as always conteiner_id
+You can restart a stopped container with **docker start** knowing as always its conteiner_id
 
   ```
   vagrant@docker101:~$ docker start 17d52393e4bf
@@ -374,7 +379,7 @@ You can restart a stopped container with **docker start** knowing as always cont
 ### Getting inside a container
 
 One of the most useful commands in docker is **docker exec**, using it you can exucute a command inside a contaier.
-For example i could run `ps` to knwo which processes are running in a container
+For example i could run `ps` to know which processes are running in a container
 
   ```
   vagrant@docker101:~$ docker exec 17d52393e4bf ps
@@ -420,7 +425,7 @@ Let's suppose we have a bash shell gotten as you saw in the previous chapter, wh
   
   So data surive to a stop/start process but they don't to a remove command.
   If you remove your container you'll loose all data in it.
-  When you write something on a container new layers are added on top of all those (read only) added during building phase. 
+  When you write something on a container new layers (writable layers) are added on top of all those (read only) added during building phase. 
   Once you remove a container docker will remove layers written after building phase.
   You can see these layers:
   
@@ -430,7 +435,7 @@ Let's suppose we have a bash shell gotten as you saw in the previous chapter, wh
   -rw-r--r-- 1 root root 14 Jul 30 18:54 entropy
   ```
   
-  Layers are stored in your local machine in `/var/lib/docker/overlay2`, `overlay2` is the name of storage driver.
+  Layers are stored in your local machine in `/var/lib/docker/overlay2`, `overlay2` is the name of the storage driver.
   
   Let's try to remove that container (a running container) with **docker rm**
   
@@ -438,7 +443,7 @@ Let's suppose we have a bash shell gotten as you saw in the previous chapter, wh
   vagrant@docker101:~$ docker rm 17d52393e4bf
   Error response from daemon: You cannot remove a running container 17d52393e4bf43ed76e3015104b8779409b53fd2ffbb723bda09bd092a3b88eb. Stop the container before attempting removal or force remove
   ```
-  Ok, we can't remove a running container. We could force removing with `docker rm -f 17d52393e4bf` but let's follow the right way.
+  Ok, we can't remove a running container. We could force its removing with `docker rm -f 17d52393e4bf` but let's follow the right way.
   
   ```
   vagrant@docker101:~$ docker stop 17d52393e4bf && docker rm 17d52393e4bf
@@ -456,8 +461,9 @@ Let's suppose we have a bash shell gotten as you saw in the previous chapter, wh
     
  ### Volumes
  
- What we've lerant so fare is: a container gets its non persistent storage managed by storage driver but you loose all after removing the container.
- In order to obtain persisten storage you have to use volumes.
+ What we've learnt so far is: each container gets its **non persistent storage** and it's managed by storage driver but you loose all after removing the container.
+ In order to obtain **persistent storage** you have to use volumes.
+
  A volume is an external storage that you can attach to a container and because of it's external to a container it persists after you remove container at which it's attached.
  
  You can create a volume before running a container with **docker volume crete**
@@ -502,11 +508,13 @@ And yon can delete a volume with **docker volume rm**
   DRIVER    VOLUME NAME
   ```
 
-As you maybe already noticed volumes are indipendent objects and they are related with a container just during time they are attach to a container. After the container dies a volume continue to exist and can be used/attached to a new container provind a good way for persistent storage.
+As you maybe already noticed volumes are indipendent objects and they are related with a container just during time they are attached to a container. After the container dies a volume continue to exist and can be used/attached to a new container providing a good way to implement persistent storage.
 
 #### Attaching a volume
 
-Let's see now how to attach a volume to a container using **docker run**. In otder to do that we can use `--mount` option specifying the source (the volume name) and the target (the mountpoint inside container's fs)
+Let's see now how to attach a volume to a container using **docker run**. 
+
+In otder to do that we can use `--mount` option specifying the source (the volume name) and the target (the mountpoint inside container's fs)
 
   ```
   vagrant@docker101:~$ docker run -dit --name attach_volume --mount source=my_volume,target=/my_persistent_dir ubuntu
@@ -515,7 +523,7 @@ Let's see now how to attach a volume to a container using **docker run**. In otd
 
 volume `my_volume` will be created if it does not exist.
 
-A new container named `attach_volume` exists and a newly created volume `my_volume` has been created and attached to it
+A new container named `attach_volume` exists and a volume `my_volume` has been created and attached to it
 
   ```
   vagrant@docker101:~$ docker ps
@@ -537,7 +545,7 @@ A new container named `attach_volume` exists and a newly created volume `my_volu
   i will survive
   ```
   
-  Remote all
+  Remove all
   
   ```
   vagrant@docker101:~$ docker ps
@@ -570,7 +578,7 @@ A new container named `attach_volume` exists and a newly created volume `my_volu
   240af3f227538d08f1ff265d5acfc242d6548d5ee7680a15357836c9ae0225c8
   ```
   
-  As you can see above you can change `target` mountpoint, container name and image, result is the same our `my_volyme` volume will be attached to the new container, let's verify it.
+  As you can see above you can change `target` mountpoint, container name and image but result will be the same: our `my_volume` volume will be attached to the new container, let's verify it.
   
   ```
   vagrant@docker101:~$ docker ps
@@ -608,19 +616,11 @@ Let's try to run a postgres container attaching pgdata folder to an external vol
   
   Did you notice? We used another options `-v` to create/attach a container in `run` command. You can use both `--mount` or `-v`, [here](https://docs.docker.com/storage/volumes/#choose-the--v-or---mount-flag) some infos about this double options
   
-  Now we wanna try to connect to postgres but wait a second we didn't open any port (`-p` options in `docker run` command) so we can't use `psql` from our local machine because there's not mapping between a local port and container one. We'll it do later but for now we can just start a new container and run from there `psql`. 
+  Now we wanna try to connect to postgres but wait a second we didn't open any port (`-p` options in `docker run` command) so we can't use `psql` from our local machine because there's no mapping between a local port and a container one. We'll do it later but for now we can just start a new container and run from there `psql`. 
+  
   
   ```
   vagrant@docker101:~$ docker run -it --rm postgres bash
-  root@f7da5d8f4580:/#
-  ```
-  
-  ```
-  vagrant@docker101:~$ docker run -it --rm postgres bash
-  root@f7da5d8f4580:/# psql -h cool_engelbart -U postgres
-  psql: error: could not connect to server: Connection refused
-	  Is the server running on host "cool_engelbart" (127.0.0.1) and accepting
-	  TCP/IP connections on port 5432?
   root@f7da5d8f4580:/# psql -h 172.17.0.3 -U postgres
   Password for user postgres: 
   psql (13.3 (Debian 13.3-1.pgdg100+1))
@@ -643,7 +643,7 @@ Let's try to run a postgres container attaching pgdata folder to an external vol
 
   ```
   
-  We're happy but not too much because we can't connect to postgres directly from our local machine, in order to do that we have to remove running container and use `-p` option to bint local port to a conatiner one. We won't losse our data because pgdata dir has been attached to an external volume. 
+  We're happy but not too much because we can't connect to postgres directly from our local machine, in order to do that we have to remove running container and use `-p` option to bint local port to a conatiner one. We won't loose our data because pgdata dir has been attached to an external volume. 
   
   ```bash
   vagrant@docker101:~$ docker rm -f $(docker ps -q)
@@ -668,7 +668,7 @@ Let's try to run a postgres container attaching pgdata folder to an external vol
   ```
   
   First of all `docker rm -f $(docker ps -q)` it's a useful trick to remove all the running containers.
-  In `psql -h localhost -p 6789 -U postgres` we connected to running postgres container using localhost and the number of mapped port used in `-p` option of run command. It worked but take in consideration that postgres container is attached to a docker network and it has it own ip (as you've seen before) so if we'd have retrieved that ip with `docker inspect 30b3896cc16b|grep IPAddress` and then `psql -h 172.17.0.2 -p 5432 -U postgres`. We'll talk about docker network in the next chapter
+  In `psql -h localhost -p 6789 -U postgres` we connected to running postgres container using localhost and the number of mapped port used in `-p` option of run command. It worked but take in consideration that postgres container is attached to a docker network and it has it own ip (as you've seen before) so I could obtain the same result even if we'd have retrieved that ip with `docker inspect 30b3896cc16b|grep IPAddress` and then `psql -h 172.17.0.2 -p 5432 -U postgres`. We'll talk about docker network in the next chapter
   
   
   
