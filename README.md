@@ -789,3 +789,29 @@ And you can ping container as any host in your lan
 
   ```
   
+It works even with a different new network, so let's create a new bridge network:
+
+  ```
+  vagrant@docker101:~$ docker network create --driver bridge my_network
+  4032cd4d89fedf783f36fa74ad2b7f6214a0b415133e1aea4a5299451b0cb5ae
+
+  vagrant@docker101:~$ docker network ls|grep my_network
+  4032cd4d89fe   my_network   bridge    local
+
+  vagrant@docker101:~$ docker run -d --rm --network my_network --name container_in_my_network alpine sleep 1000
+  60a137aa23c7b1e5c42a5e54019a1d50cb7eda68f2701cb100a546f713f33aaa
+
+  vagrant@docker101:~$ docker network inspect my_network|grep -A 4 -B 2 in_my_network
+        "Containers": {
+            "60a137aa23c7b1e5c42a5e54019a1d50cb7eda68f2701cb100a546f713f33aaa": {
+                "Name": "container_in_my_network",
+                "EndpointID": "52cb1815755aedd0a9db3353b7fb9b55a6a5fb03563ac46e0bb03066455d4edd",
+                "MacAddress": "02:42:ac:12:00:02",
+                "IPv4Address": "172.18.0.2/16",
+                "IPv6Address": ""
+
+  ```
+  
+ `--driver` it's not necessary in this case becasue `bridge` is the default value but it must be used to create `overlay`, `macvlan` or `ipvlan` networks.
+ 
+ `
