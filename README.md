@@ -824,3 +824,21 @@ In a real develoment environment modern applicaton are composed by different ser
 Docker compose help us to solve this issue, you can think to it as an orchestrator to manage containers.
 With `docker-compose` you can build/run/stop/stop all the services belonging to your application in a single command.
 
+
+#### Let's dirty our hands with docker-compose
+
+In `examples/compose` you'll find a dev environment composed by a backend flask app a mysql databse and a nginx proxy.
+There's a README file with all the insturctions to load this env. Briefly, in your lab (`vagrant ssh`)
+
+* cd `/vagrant/examples/compose`
+* create a .env file with the below content
+  ```
+  DB_USER=root
+  DB_PASSWORD=db-78n9n
+  DB_NAME=example
+  DB_HOST=db
+  MYSQL_DATABASE=example 
+  MYSQL_ROOT_PASSWORD=db-78n9n
+  ```
+* run `docker-compose up`
+* load some data `sudo chmod u+x ./setup.sh && ./setup.sh`
