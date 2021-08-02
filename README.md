@@ -815,3 +815,12 @@ It works even with a different new network, so let's create a new bridge network
  `--driver` it's not necessary in this case becasue `bridge` is the default value but it must be used to create `overlay`, `macvlan` or `ipvlan` networks.
  
  `
+## Docker Compose
+
+In this chapther will talk about `docker-compose`, if you followed so far you know how to build images, run containers from it and use volumes and networks for storage and communication.
+
+In a real develoment environment modern applicaton are composed by different services and each one needs to be wrapped in a different container. That means the more your application grows the more the number of containers to be managed grows. It's not possible start/stop/build manually each contianer everytime if your application has more than 2/3 servies.
+
+Docker compose help us to solve this issue, you can think to it as an orchestrator to manage containers.
+With `docker-compose` you can build/run/stop/stop all the services belonging to your application in a single command.
+
