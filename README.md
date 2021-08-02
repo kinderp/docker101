@@ -697,4 +697,16 @@ Let's see in details the first one named: `brigde`, its name is not casual, as y
   docker0		8000.0242e47410f2	no		vethf0aa088
   ```
   
-docker during its installation has created `docker0` bridge for you and 
+docker during its installation has created `docker0` bridge for you and it will be used as device for `bridge` networks.
+Bridge is the dafault network in docker and every new containers will be added in this network but ofc you can always specify a different network for a new container.
+Bridge networks have a local scope (`SCOPE` column in `docker network ls`) that means they can connect containers only inside a single host, furthermore a bridge network is isolated: a container inside a bridge network can't talk with another container in a different bridge network even if they resides in the same host.
+If you wanna connect to a container inside a bridge network from the outside workd you have to use port mapping as describe in the previous chapters.
+
+If you need to connect each others containers in different hosts you have to use `overlay` networks, these kind of networks are multiple hosts networks.
+Bridge network is just an isolated bridge scoped to a single host while overlay is a single layer2 bridge network spanning multiple hosts and it doesn't matter if hosts are inside different (physical network) containers will stay in the same (virtual) network.
+
+The only issue with overlay networks is that they are containers only network, if you need to connect containers to VM(s) or physical servers you have to use `macvlan` networks. In a macvlan network containers have its ip and mac address on the existing network and that permits containers to be visivile in your lan without any bridge or port mapping.
+
+
+
+
