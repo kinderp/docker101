@@ -1,4 +1,36 @@
-# docker101
+
+Table of Contents
+=================
+
+
+   * [Playground](#playground)
+       * [Start lab](#start-lab)
+       * [Stop lab](#stop-lab)
+       * [Suspend - Resume lab](#suspend---resume-lab)
+       * [Destroy lab](#destroy-lab)
+   * [Introduction](#introduction)
+      * [Docker Architecture](#docker-architecture)
+         * [docker client](#docker-client)
+         * [docker engine](#docker-engine)
+         * [containerd and others container runtimes](#containerd-and-others-container-runtimes)
+      * [Docker Images](#docker-images)
+         * [Docker Images Commands](#docker-images-commands)
+      * [Docker Registries](#docker-registries)
+         * [Docker Registries Commands](#docker-registries-commands)
+      * [Building Images](#building-images)
+      * [Running Containers](#running-containers)
+      * [Stopping Containers](#stopping-containers)
+      * [Starting Containers](#starting-containers)
+      * [Getting inside a container](#getting-inside-a-container)
+      * [Removing Container and Persistent data](#removing-container-and-persistent-data)
+      * [Volumes](#volumes)
+         * [Attaching a volume](#attaching-a-volume)
+      * [Let's dirty our hands with volumes](#lets-dirty-our-hands-with-volumes)
+      * [Docker Network](#docker-network)
+   * [Docker Compose](#docker-compose)
+      * [Let's dirty our hands with docker-compose](#lets-dirty-our-hands-with-docker-compose)
+      * [Docker-compose commands](#docker-compose-commands)
+
 
 ### Playground
 
