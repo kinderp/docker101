@@ -825,7 +825,7 @@ Docker compose help us to solve this issue, you can think to it as an orchestrat
 With `docker-compose` you can build/run/stop/stop all the services belonging to your application in a single command.
 
 
-#### Let's dirty our hands with docker-compose
+### Let's dirty our hands with docker-compose
 
 In `examples/compose` you'll find a dev environment composed by a backend flask app a mysql databse and a nginx proxy.
 There's a README file with all the insturctions to load this env. Briefly, in your lab (`vagrant ssh`)
@@ -880,3 +880,67 @@ If you take a look at `docker-compose.yaml in `/vagrant/`examples/compose` you'l
 
 As you can see with compose you don't need to run any commands but you can obtain the same result with a yaml declative way.
 We can't explore every yaml field in `docker-compose.yaml` definitions, but you can check official doc [here](https://docs.docker.com/compose/compose-file/) as referecnes
+
+### Docker-compose commands
+
+Let's come back to our lab (`vagrant up` -> `vagrant ssh` -> `cd /vagrant/examples/compose`) and let's try to build all the services defined in `docker-compose.yaml` running:
+
+* `docker-compose build`
+
+With a single command you can build all images, cool. But you can decide to build only one (or more), for example only `backend` service image:
+
+* `docker-compose build backend`
+
+Probably this time building phase took just some seconds and that's why you already built `backend` images when  you ran `docker-compose build` and because of you didn't change anything in the dockerfile docker used its caching system. Remember that you can force docker to do not use cache and forcing a new build:
+
+* `docker-compose build --no-cache`
+
+You should see your built images running
+
+  ```
+  vagrant@docker101:/vagrant/examples/compose$ docker images|grep compose
+  compose_proxy       latest        9a5dd9c6b7af   10 minutes ago   18MB
+  compose_backend     latest        3743a91dd0f0   10 minutes ago   55.9MB
+  ```
+As you maybe already noticed `docker-compose` named your images following this rule: <dir where yaml resides>_<service name> (e.g. `compose_proxy`)
+  
+Our images are ready we can create containers. Let's do that running 
+  
+* `docker-comose up`
+  
+After that you'll see application container up and running
+  
+  ```
+  vagrant@docker101:~$ docker ps -a
+  CONTAINER ID   IMAGE             COMMAND                  CREATED              STATUS                        PORTS                    NAMES
+  4835a3d38a8a   compose_proxy     "nginx -g 'daemon of…"   About a minute ago   Up About a minute             0.0.0.0:80->80/tcp       compose_proxy_1
+  d478faae32f0   compose_backend   "/bin/sh -c 'flask r…"   About a minute ago   Up About a minute             0.0.0.0:5000->5000/tcp   compose_backend_1
+  a3a776f3652e   phpmyadmin        "/docker-entrypoint.…"   About a minute ago   Up About a minute             0.0.0.0:8080->80/tcp     compose_phpmyadmin_1
+  d9c79449156e   mysql:8.0.19      "docker-entrypoint.s…"   About a minute ago   Up About a minute (healthy)   3306/tcp, 33060/tcp      compose_db_1
+  ```
+  
+And if you inspect logs of the `up` command (pasted below)
+
+  ```
+  vagrant@docker101:/vagrant/examples/compose$ docker-compose up
+  Creating network "compose_backnet" with the default driver
+  Creating network "compose_frontnet" with the default driver
+  Creating compose_phpmyadmin_1 ... done
+  Creating compose_db_1         ... done
+  Creating compose_backend_1    ... done
+  Creating compose_proxy_1      ... done
+  Attaching to compose_db_1, compose_phpmyadmin_1, compose_backend_1, compose_proxy_1
+  ```
+  
+it's easy to understand that `up` command also creates networks and volumes if they do not exist and attach/connect containers to those ones  
+  
+  ```
+  vagrant@docker101:~$ docker network ls|grep compose
+  5c2c89c64aa8   compose_backnet    bridge    local
+  e6de492c9b87   compose_frontnet   bridge    local
+  ```
+  
+  ```
+  vagrant@docker101:~$ docker volume ls|grep compose
+  local     compose_db-data
+  ```
