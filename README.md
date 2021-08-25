@@ -848,4 +848,35 @@ If you take a look at `docker-compose.yaml in `/vagrant/`examples/compose` you'l
 * `version`: it defines which version of docker-compose.yaml we wanna use
 * `services`: it defines which services will be part of our application (`backend`, `db`, `proxy`)
 * `volumes`: it defines volumes you wanna attach to rout service containers
-* `network`
+* `network`: it defines docker networks you wanna create
+
+`services` are our containers application and for each ones we need to specify every infos in order to inform compose how to build, start, expose a port, attach a volume or connect to a network and so on. For each of previous actions you know does exist a docker command but this time instead we'll use yaml field, for example let's take a look at the `backend` service in our `docker-compose.yaml`
+
+  ```yaml
+    backend:
+      build: backend
+      restart: always
+      volumes:
+        - ./backend:/code
+      env_file:
+        - .env
+      stdin_open: true
+      tty: true
+      ports:
+        - 5000:5000
+      networks:
+        - backnet
+        - frontnet
+      depends_on:
+       - db
+  ```
+
+  just using yaml we're inforning compose that
+  * `build`: build context resides in `backend` dir (if you rerember we used to define build context as last parameter in build cmd `docker build -t my_container backend`
+  * `volumes`: attach `backend` dir as volume in `/code` dir in the container fs
+  * `ports`: expose container port 5000 to the corresponding host one (`-p 5000:5000` in `docker run` cmd)
+  * `networks`: connect `backend` container to both back and front networks
+  * `depends_on`: do not start backend container before db
+
+As you can see with compose you don't need to run any commands but you can obtain the same result with a yaml declative way.
+We can't explore every yaml field in `docker-compose.yaml` definitions, but you can check official doc [here](https://docs.docker.com/compose/compose-file/) as referecnes
