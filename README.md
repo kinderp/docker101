@@ -944,3 +944,61 @@ it's easy to understand that `up` command also creates networks and volumes if t
   vagrant@docker101:~$ docker volume ls|grep compose
   local     compose_db-data
   ```
+
+You can stop running services typing `CTRL-C` in your terminal or running
+  
+ * `docker-compose stop`
+  
+  ```
+  vagrant@docker101:/vagrant/examples/compose$ docker-compose stop
+  Stopping compose_proxy_1      ... done
+  Stopping compose_backend_1    ... done
+  Stopping compose_phpmyadmin_1 ... done
+  Stopping compose_db_1         ... done
+  ```
+  
+Take in consideration you've just stopped containers (not removed) they do still exist
+  
+  ```
+  vagrant@docker101:/vagrant/examples/compose$ docker ps -a
+  CONTAINER ID   IMAGE             COMMAND                  CREATED          STATUS                          PORTS     NAMES
+  4835a3d38a8a   compose_proxy     "nginx -g 'daemon of…"   15 minutes ago   Exited (0) About a minute ago             compose_proxy_1
+  d478faae32f0   compose_backend   "/bin/sh -c 'flask r…"   15 minutes ago   Exited (0) About a minute ago             compose_backend_1
+  a3a776f3652e   phpmyadmin        "/docker-entrypoint.…"   15 minutes ago   Exited (0) About a minute ago             compose_phpmyadmin_1
+  d9c79449156e   mysql:8.0.19      "docker-entrypoint.s…"   15 minutes ago   Exited (0) About a minute ago             compose_db_1
+  ```
+  
+You can re-start all those with both
+  * `docker-compose start`
+  * `docker-compose up`
+  
+  ```
+  vagrant@docker101:/vagrant/examples/compose$ docker-compose start
+  Starting db         ... done
+  Starting backend    ... done
+  Starting phpmyadmin ... done
+  Starting proxy      ... done
+  ```
+  
+  ```
+  vagrant@docker101:/vagrant/examples/compose$ docker ps
+  CONTAINER ID   IMAGE             COMMAND                  CREATED          STATUS                    PORTS                    NAMES
+  4835a3d38a8a   compose_proxy     "nginx -g 'daemon of…"   17 minutes ago   Up 20 seconds             0.0.0.0:80->80/tcp       compose_proxy_1
+  d478faae32f0   compose_backend   "/bin/sh -c 'flask r…"   17 minutes ago   Up 21 seconds             0.0.0.0:5000->5000/tcp   compose_backend_1
+  a3a776f3652e   phpmyadmin        "/docker-entrypoint.…"   17 minutes ago   Up 21 seconds             0.0.0.0:8080->80/tcp     compose_phpmyadmin_1
+  d9c79449156e   mysql:8.0.19      "docker-entrypoint.s…"   17 minutes ago   Up 21 seconds (healthy)   3306/tcp, 33060/tcp      compose_db_1
+  ```
+  
+If you used `docker-compose start` as I did you lost logs (`docker-compse up` always attachs to pid 1 of its containers, you can avoid that running it in detaching mode: `docker-compose up -d`).
+  
+To see all logs just run:
+  
+  * `docker-compose logs`
+
+Or for a specific service (e.g. `backend`)
+  
+  * `docker-compose logs backend`
+  
+If you wanna follow (in real-time) logs just use `-f` option
+  
+  * `docker-compose logs -f`, `docker-compse logs -f backend`
