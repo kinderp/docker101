@@ -989,7 +989,7 @@ You can re-start all those with both
   d9c79449156e   mysql:8.0.19      "docker-entrypoint.s…"   17 minutes ago   Up 21 seconds (healthy)   3306/tcp, 33060/tcp      compose_db_1
   ```
   
-If you used `docker-compose start` as I did you lost logs (`docker-compse up` always attachs to pid 1 of its containers, you can avoid that running it in detaching mode: `docker-compose up -d`).
+If you used `docker-compose start` as I did you lost logs (`docker-compse up` always attaches to pid 1 of its containers, you can avoid that running it in detaching mode: `docker-compose up -d`).
   
 To see all logs just run:
   
@@ -1002,3 +1002,29 @@ Or for a specific service (e.g. `backend`)
 If you wanna follow (in real-time) logs just use `-f` option
   
   * `docker-compose logs -f`, `docker-compse logs -f backend`
+  
+Finally if you want to destroy all services you can run:
+  
+  * `docker-compose down`
+  
+Be careful, it deletes not only containers but networks too
+  
+  ```
+  vagrant@docker101:/vagrant/examples/compose$ docker-compose down
+  Stopping compose_proxy_1      ... done
+  Stopping compose_backend_1    ... done
+  Stopping compose_phpmyadmin_1 ... done
+  Stopping compose_db_1         ... done
+  Removing compose_proxy_1      ... done
+  Removing compose_backend_1    ... done
+  Removing compose_phpmyadmin_1 ... done
+  Removing compose_db_1         ... done
+  Removing network compose_backnet
+  Removing network compose_frontnet
+  ```
+
+but not associated volumes and images, you need to explicitly ask compse for that with options
+  * `--rmi all`
+  *  `-v`
+
+For any doubts about a `<command>` just use `docker-compse <command> --help` (e.g. `docker-compse down --help`)
