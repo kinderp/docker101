@@ -83,6 +83,33 @@ Official docs [here](https://docs.docker.com/get-started/overview/#docker-archit
 
 ![](https://docs.docker.com/engine/images/architecture.svg)
 
+Containers are not first class objects in the Linux kernel. Containers are fundamentally composed of several underlying kernel primitives: **namespaces** (who you are allowed to talk to), cgroups (the amount of resources you are allowed to use), and LSMs (Linux Security Modules—what you are allowed to do). Together, these kernel primitives allow us to set up **secure, isolated, and metered execution environments** for our processes. This is great, but doing all of this manually each time we want to create a new isolated process would be tiresome.
+
+Instead of unshare-ing, cgcreat-ing, and semodul-ing custom namespaces, cgroups, and selinux policies every time we want to create a new isolated process, **these components have been bundled together** in a concept called a "container". Tools we call **container runtimes** make it easy to compose these pieces into an isolated, secure execution environment.
+
+the term “runtime” is referring to the lifecycle phase of a program or the usage of a specific language to execute a program. A container runtime functions similarly to the latter—it’s software that runs and manages the components required to run containers
+
+After cgroups were added to the Linux kernel in 2007, several projects emerged that took advantage of them by creating containerization processes.
+The most famous one was **LXC**
+
+Docker (at the time, "dotCloud"), began building tooling around LXC to make containers more developer and user friendly. Before long, Docker dropped LXC, created the **Open Container Initiative** to establish container standards, and open sourced some of their container components as the **libcontainer** project.
+
+**OCI runtimes** sometimes referred to as **low-level** runtimes, implementations of the OCI Runtime spec are focused on managing the container lifecycle—abstracting the Linux primitives—and are not required to do much else. Low level runtimes create and run “the container.”
+
+**runC** is the result of all of Docker's work on **libcontainer** and the OCI. It is the de-facto standard low-level container runtime. It is written in Go and maintained under Docker's open source moby project.
+
+When the Kubernetes container orchestrator was introduced, the Docker runtime was hardcoded into its machine daemon, the kubelet. However, as Kubernetes rapidly became popular the community began to need alternative runtime support.
+
+Hyper, CoreOS, Google, and other Kubernetes sponsors collaborated on a high-level spec describing a container runtime from a container-orchestration perspective: the **Container Runtime Interface**. Integrating with the CRI instead of a specific runtime allows the kubelet to support multiple container runtimes.
+
+By introducing the CRI, the Kubernetes authors effectively decoupled the kubelet from the underlying container runtime in an extensible way.
+
+**containerd** is the Docker implementation of CRI specifications, containerd currently provides a full CRI implementation.
+After a while containerd and runC were split out from the core of Docker.
+
+
+
+
 #### docker client
 
 TODO
