@@ -75,7 +75,7 @@ Lab takes space on disk so it's a good idea removing it after your training sess
 
 ## Introduction
 
-TODO
+![](https://github.com/kinderp/docker101/blob/master/images/vm_vs_container.jpeg)
 
 ### Docker Architecture
 
