@@ -79,7 +79,9 @@ Lab takes space on disk so it's a good idea removing it after your training sess
 
 ### Docker Architecture
 
-TODO
+Official docs [here](https://docs.docker.com/get-started/overview/#docker-architecture)
+
+![](https://docs.docker.com/engine/images/architecture.svg)
 
 #### docker client
 
