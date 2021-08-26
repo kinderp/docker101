@@ -107,8 +107,9 @@ By introducing the CRI, the Kubernetes authors effectively decoupled the kubelet
 **containerd** is the Docker implementation of CRI specifications, containerd currently provides a full CRI implementation.
 After a while containerd and runC were split out from the core of Docker.
 
-
-
+<p align="center">
+  <img src="https://github.com/kinderp/docker101/blob/master/images/architecture.png">
+</p>
 
 #### docker client
 
