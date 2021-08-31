@@ -17,6 +17,7 @@ services:
     restart: always
     depends_on: 
         - rabbit
+        - mongo
     stdin_open: true
     tty: true
     ports:
@@ -57,23 +58,12 @@ services:
   mongo:
     image: mongo
     restart: always
-    networks:
-        - dockerlab-net
+    ports: 
+       - "27017:27017"
+    #networks:
+    #    - dockerlab-net
     volumes:
         - mongo_v:/data/db
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: pippo
-
-  mongo-express:
-    image: mongo-express
-    restart: always
-    ports:
-        - 8081:8081
-    environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: root
-      ME_CONFIG_MONGODB_ADMINPASSWORD: pippo
-      ME_CONFIG_MONGODB_URL: mongodb://root:pippo@mongo:27017/
 
 volumes:
     rabbit_v:
