@@ -1,0 +1,7 @@
+echo $INTERFACE_HOST
+
+FILENAME=$1
+
+echo $FILENAME
+
+curl http://$INTERFACE_HOST:5000/add/$FILENAME
