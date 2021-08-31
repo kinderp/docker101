@@ -19,4 +19,29 @@ Other architecture constrains are:
 * `nginx` must serve all files in that volume
 * `rabbit` and `mongo` need too their own volumes for persisting storage
 
+```
+An   inotify    deemon
+is running  on  master
+It will trigger a call
+to  service  interface 
+at  every new fs event
+occuring  i n  /shared 
++--------+
+| MASTER |----+                                                                +-------+
++--------+    |                                             +----------------->| MONGO |
+              |                                             |                  +-------+
+              | /shared         ./mydocuments               |
+        +------------+          +------+              +-----+-----+            +--------+           +-------+
+        |   VOLUME   |----------| HOST !              | INTERFACE |----------->| RABBIT |<----------| CLIENT|
+        +------------+          +------+              +-----------+            +--------+           +---+---+
+              | /www/data                            (flask on 5000)                                    |
+              |                                      It will queue  event                               |
+              |                                      triggered by inotify                               |
++-------+     |                                      deamon on master                                   |
+| NGINX |-----+                                                                                         |
++---+---+                                                                                               |
+    |                                                                                                   |
+    +---------------------------------------------------------------------------------------------------+
+```
+
 
