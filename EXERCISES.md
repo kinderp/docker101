@@ -2,7 +2,7 @@ For a new emerging chinese client `dlopbox` you and your teammates have to imple
 For the beta release there will be a master device and slaves ones. Documents inside dir under control in master device filesystem
 must be syncronized in real time with all the slaves devices.
 
-Architecture will be composed at least by followting services:
+Architecture will be composed by the followting services:
 
 * `master` where target dir resides
 * `nginx` to serve static files inside dir under control in master device
@@ -44,4 +44,20 @@ occuring  i n  /shared
     +---------------------------------------------------------------------------------------------------+
 ```
 
+In `/vagrant/exercises/` you can find a dir for each of this services with code and Dockerfile(s).
+A `docker-compose.yaml` is present in that dir too. You can test the whole system in this way:
 
+* `vagrant ssh`
+* `cd /vagrant/exercises`
+* `docker-compose up -d`
+* Get a shell in `client` container: `docker exec -it $(docker ps | grep myclient | awk '{ print $1 }') bash` 
+* Do the same in master: `docker exec -it $(docker ps | grep mydropbox | awk '{ print $1 }') bash`
+* Once inside `mydropbpx` container (above command), create a new file in `/shared`: `cd /shared && touch prova`
+* In `client` container you should see the same file running `ls`
+
+Reproduce the same architecture without `docker-compose` just using `docker` cli commands, in particular you have to:
+
+* Build a container for each dir in `/vagrant/exercises/` (each dir corresponds to a service in `doccker-compose.yaml`)
+* Create a dedicated network, each container will be placed in that network
+* Crete volumes for `master`, `nginx`, `mongo` and `rabbit`. Remember `master` and `nginx` have to share the same dir (our target dir)
+* Run manually each container with the correct options and reproduce all the test steps descrived above 
