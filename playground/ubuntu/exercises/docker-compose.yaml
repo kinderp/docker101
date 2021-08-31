@@ -1,0 +1,83 @@
+version: '3.3'
+
+services:
+  myclient:
+    container_name: client
+    build: myclient
+    restart: always
+    stdin_open: true
+    tty: true
+    depends_on:
+        - rabbit
+        - myinterface
+
+  myinterface:
+    container_name: interface
+    build: myinterface
+    restart: always
+    depends_on: 
+        - rabbit
+    stdin_open: true
+    tty: true
+    ports:
+        - "5000:5000"
+
+  mydropbox:
+    container_name: dropbox
+    build: mydropbox
+    volumes:
+        - type: bind
+          source: ./mydocuments
+          target: /shared
+  rabbit:
+    container_name: rabbit
+    ports:
+        - "15672:15672"
+        - "5672:5672"
+    #networks:
+       #- dockerlab-net
+    image: rabbitmq:3.9.5-management
+    volumes:
+        - rabbit_v:/var/lib/rabbitmq
+    restart: on-failure
+    env_file:
+        - ./.env
+
+  nginx:
+    image: nginx
+    build: mynginx
+    volumes:
+       - type: bind
+         source: ./mydocuments
+         target: /www/data
+    ports:
+       - "8080:8080"
+    restart: on-failure
+
+  mongo:
+    image: mongo
+    restart: always
+    networks:
+        - dockerlab-net
+    volumes:
+        - mongo_v:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: pippo
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+        - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: pippo
+      ME_CONFIG_MONGODB_URL: mongodb://root:pippo@mongo:27017/
+
+volumes:
+    rabbit_v:
+    mongo_v:
+
+networks:
+    dockerlab-net:
