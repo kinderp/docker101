@@ -10,9 +10,11 @@ Table of Contents
        * [Destroy lab](#destroy-lab)
    * [Introduction](#introduction)
       * [Docker Architecture](#docker-architecture)
-         * [docker client](#docker-client)
-         * [docker engine](#docker-engine)
-         * [containerd and others container runtimes](#containerd-and-others-container-runtimes)
+         * [Chroot, Namespaces, Cgroups](#chroot-namespaces-cgroups)
+           * [Build your filesystem](#build-your-filesystem)
+           * [Chroot rootfs dir](#chroot-rootfs-dir)
+           * [Namespaces](#namespaces)
+           * [Cgroups](#cgroups)
       * [Docker Images](#docker-images)
          * [Docker Images Commands](#docker-images-commands)
       * [Docker Registries](#docker-registries)
@@ -145,17 +147,6 @@ We can't see processes outside our namespace, processes are isolated from those 
 * `sudo cgcreate -g "cpu,cpuacct,memory:$cgroup_id"`
 * `cgset -r cpu.shares=512 "$cgroup_id" && cgset -r memory.limit_in_bytes=1000000000 "$cgroup_id"`
 * `sudo cgexec -g "cpu,cpuacct,memory:$cgroup_id" unshare -fmipn --mount-proc chroot $PWD /bin/sh -c "/bin/mount -t proc proc /proc && hostname test && /bin/sh"`
-#### docker client
-
-TODO
-
-#### docker engine
-
-TODO
-
-#### containerd and others container runtimes
-
-TODO
 
 ### Docker Images
 
