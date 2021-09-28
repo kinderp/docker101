@@ -111,6 +111,40 @@ After a while containerd and runC were split out from the core of Docker.
   <img src="https://github.com/kinderp/docker101/blob/master/images/architecture.png">
 </p>
 
+#### Chroot, Namespaces, Cgroups
+
+* [Containers from Scratch, Eric Chiang](https://ericchiang.github.io/post/containers-from-scratch/) [Video](https://www.youtube.com/watch?v=wyqoi52k5jM)
+
+##### Build your filesystem
+
+* `wget https://github.com/ericchiang/containers-from-scratch/releases/download/v0.1.0/rootfs.tar.gz`
+* `mkdir rootfs`
+* `cd rootfs`
+* `tar -xf ../rootfs.tar.gz`
+
+##### Chroot rootfs dir
+
+* `sudo chroot $PWD /bin/sh -c "/bin/mount -t proc proc /proc && hostname test && /bin/sh"`
+* run outside chroot `top`
+* run inside chroot `ps aux|grep top` and get its `PID`, `ip a show`
+* run inside chroot `kill -9 <PID>`
+
+We can kill a process outside chroot, no isolation at all.
+
+##### Namespaces
+
+* `sudo unshare -fmipn --mount-proc chroot $PWD /bin/sh -c "/bin/mount -t proc proc /proc && hostname test && /bin/sh"`
+* run inside namespace `ps aux`, `ip a show`
+
+We can't see processes outside our namespace, processes are isolated from those ones running in the host machine
+
+##### Cgroups
+
+* `cgroup_id=cgroup_$(shuf -i 1000-2000 -n 1)`
+* `sudo cgcreate -g "cpu,cpuacct,memory:$cgroup_id"` (maybe you'd need cgroup-tools, `apt-get install cgroup-tools`)
+* `sudo cgcreate -g "cpu,cpuacct,memory:$cgroup_id"`
+* `cgset -r cpu.shares=512 "$cgroup_id" && cgset -r memory.limit_in_bytes=1000000000 "$cgroup_id"`
+* `sudo cgexec -g "cpu,cpuacct,memory:$cgroup_id" unshare -fmipn --mount-proc chroot $PWD /bin/sh -c "/bin/mount -t proc proc /proc && hostname test && /bin/sh"`
 #### docker client
 
 TODO
