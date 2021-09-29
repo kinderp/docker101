@@ -126,19 +126,57 @@ After a while containerd and runC were split out from the core of Docker.
 
 ##### Chroot rootfs dir
 
+kernel somewhere in memory has a variable poiting to inode of root `/` and it uses that each time an absolute path needs to be resolved by a process for example
+during a `chdir` syscall. A process can change its view of the whole filesystem using `chroot` syscall. Calling `chroot(pathname)` a process will ask to the kernel to change process's root dir from `/` to `pathname`. After that all the absolute path will be resolved starting from `pathname`- That could be useful during repairing session of a system for example mounting a partition and then chrooting it but it's not an isolation mechanism because processes running in a chroot can still see other process in the system. Let's see these concept with some commands. 
+We'll chroot `$PWD` (`rootfs` dir crated before) and will run inside that a shell but before doing it we will mount system /proc filesystem to make ps/top working correctly.
+
 * `sudo chroot $PWD /bin/sh -c "/bin/mount -t proc proc /proc && hostname test && /bin/sh"`
 * run outside chroot `top`
 * run inside chroot `ps aux|grep top` and get its `PID`, `ip a show`
 * run inside chroot `kill -9 <PID>`
 
-We can kill a process outside chroot, no isolation at all.
+As you can see We can still kill a process running in our system even if `sh` process has been chrooted, in other words no isolation at all.
+Problem there is that `sh` process is still in the same namespaces of the other process in the system
 
 ##### Namespaces
+
+Namespaces give us isolation we need (for processes) and even more. 
+
+There are 7 different namespaces.
+
+* **Mount**, `mnt` Processes running in separate mount namespaces cannot access files outside of their mount point. Because this is done at a kernel level, it’s much more secure than changing the root directory with chroot.
+
+* **Process**, `pid` Init is the root of process tree in the system and has PID 1. The process namespace creates a branch of the PID tree, and doesn’t allow access further up the branch. Processes in child namespaces will have multiple PIDs the first one representing the global PID used by the main system, and the second PID representing the PID within the child process tree, which will restart from 1.
+
+* **Interprocess Communication**, `ipc`. This namespace controls whether or not processes can talk directly to one another.
+
+* **Network**, `net`. This namespace manages which network devices a process can see. This doesn’t automatically set up anything for you—you’ll still need to create virtual network devices, and manage the connection between global network interfaces and child network interfaces. Containerization software like Docker already has this figured out, and can manage networking for you.
+
+* **User**. This namespace allows process to have “virtual root” inside their own namespace, without having actual root access to the parent system. It also partitions off UID and GID information, so child namespaces can have their own user configurations.
+
+* **UTS**. This namespace controls hostname and domain information, and allows processes to think they’re running on differently named servers.
+
+* **Cgroup** . Cgroups allow the system to define resource limits (CPU, memory, disk space, network traffic, etc.) to a group of processes. This is a useful feature for containerized apps, but it doesn’t do any kind of “information isolation” like namespaces would. The cgroup namespace is a separate thing, and only controls which cgroups a process can see, and does not assign it to a specific cgroup.
+
+By default a process in the sytems runs inside global namespaces, let's see how to change that
+
+`Unshare` command creates a new namespace for current process unsharing the global one =)
+
+option | meaning
+------------ | -------------
+`-i` | `Unshare the IPC namespace`
+`-m` | `Unshare the mount namespace`
+`-n` | `Unshare the network namespace`
+`-p` | `Unshare the PID namespace`
+`-f` | `Fork the specified program as a child process of unshare rather than running it directly. This is useful when creating a new PID namespace`
+
+Knowing that we can now create new *pid*,*ipc*,*mount*,*net* namespaces for our `sh` passing `-f` in order to make it a child of the unshare process.
 
 * `sudo unshare -fmipn --mount-proc chroot $PWD /bin/sh -c "/bin/mount -t proc proc /proc && hostname test && /bin/sh"`
 * run inside namespace `ps aux`, `ip a show`
 
-We can't see processes outside our namespace, processes are isolated from those ones running in the host machine
+Now we can't see processes outside our new *pid* namespace, processes are isolated from those ones running in the host machine in global *pid* namespace.
+We've finally obtained a complete isolation at kernel level for our `sh` process.
 
 ##### Cgroups
 
