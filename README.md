@@ -237,6 +237,7 @@ option | meaning
 `-m` | `Unshare the mount namespace`
 `-n` | `Unshare the network namespace`
 `-p` | `Unshare the PID namespace`
+`--mount-proc` | `Just before running the program, mount the proc filesystem at mountpoint (default is /proc). This is useful when creating a new PID namespace.`
 `-f` | `Fork the specified program as a child process of unshare rather than running it directly. This is useful when creating a new PID namespace`
 
 Knowing that we can now create new *pid*,*ipc*,*mount*,*net* namespaces for our `sh` passing `-f` in order to make it a child of the unshare process.
