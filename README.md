@@ -130,13 +130,82 @@ kernel somewhere in memory has a variable poiting to inode of root `/` and it us
 during a `chdir` syscall. A process can change its view of the whole filesystem using `chroot` syscall. Calling `chroot(pathname)` a process will ask to the kernel to change process's root dir from `/` to `pathname`. After that all the absolute path will be resolved starting from `pathname`- That could be useful during repairing session of a system for example mounting a partition and then chrooting it but it's not an isolation mechanism because processes running in a chroot can still see other process in the system. Let's see these concept with some commands. 
 We'll chroot `$PWD` (`rootfs` dir crated before) and will run inside that a shell but before doing it we will mount system /proc filesystem to make ps/top working correctly.
 
+Listing `rootfs` you'll see just a linux fs 
+
+```bash
+ls -l
+total 0
+drwxr-xr-x   1 antonio antonio 1344 Oct 15  2016 bin
+drwxr-xr-x   1 antonio antonio    0 Sep 12  2016 boot
+drwxr-xr-x   1 antonio antonio   46 Sep 28 17:11 dev
+drwxr-xr-x   1 antonio antonio 1872 Sep 29 17:21 etc
+drwxr-xr-x   1 antonio antonio    0 Sep 12  2016 home
+drwxr-xr-x   1 antonio antonio  106 Sep 24  2016 lib
+drwxr-xr-x   1 antonio antonio   40 Sep 23  2016 lib64
+drwxr-xr-x   1 antonio antonio    0 Sep 23  2016 media
+drwxr-xr-x   1 antonio antonio    0 Sep 23  2016 mnt
+drwxr-xr-x   1 antonio antonio    0 Sep 23  2016 opt
+dr-xr-xr-x 650 root    root       0 Sep 29 17:21 proc
+drwx------   1 antonio antonio   56 Sep 28 16:46 root
+drwxr-xr-x   1 antonio antonio   16 Sep 23  2016 run
+drwxr-xr-x   1 antonio antonio 1344 Sep 23  2016 sbin
+drwxr-xr-x   1 antonio antonio    0 Sep 23  2016 srv
+drwxr-xr-x   1 antonio antonio    0 Sep 12  2016 sys
+drwxrwxr-x   1 antonio antonio    0 Sep 24  2016 tmp
+drwxr-xr-x   1 antonio antonio   70 Oct 15  2016 usr
+drwxr-xr-x   1 antonio antonio   90 Oct 15  2016 var
+```
+
+Now let's run these commands:
+
 * `sudo chroot $PWD /bin/sh -c "/bin/mount -t proc proc /proc && hostname test && /bin/sh"`
+   ```
+   ❯ sudo chroot $PWD /bin/sh -c "/bin/mount -t proc proc /proc && hostname test && /bin/sh"
+   # ls
+   bin  boot  dev	etc  home  lib	lib64  media  mnt  opt	proc  root  run  sbin  srv  sys  tmp  usr  var
+   # 
+   ```
 * run outside chroot `top`
-* run inside chroot `ps aux|grep top` and get its `PID`, `ip a show`
+  ```
+  ❯ top
+  ```
+* run inside chroot `ps aux|grep top|grep S+`. We filter `S+` to get only foreground pids. Now get that `PID`,
+  ```
+  # ps aux|grep top|grep S+
+  1000     2167450  0.5  0.0   9772  4228 ?        S+   15:29   0:00 top
+  root     2167494  0.0  0.0  11136   928 ?        S+   15:30   0:00 grep top
+  ```
 * run inside chroot `kill -9 <PID>`
+  ```
+  # kill -9 2167450
+  # 
+  ```
+  top will be killed
+  ```
+  [1]    2167450 killed     top
+  ```
+* run inside chroot `ip a show`, net stack is always the same.
+  ```
+  # ip a show
+  1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+      link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+      inet 127.0.0.1/8 scope host lo
+         valid_lft forever preferred_lft forever
+      inet6 ::1/128 scope host 
+         valid_lft forever preferred_lft forever
+  2: enp0s31f6: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc fq_codel state DOWN group default qlen 1000
+      link/ether xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  3: wlp0s20f3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+      link/ether xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      inet 192.168.1.234/24 brd 192.168.1.255 scope global noprefixroute dynamic wlp0s20f3
+         valid_lft 16591sec preferred_lft 16591sec
+      inet6 fe80::1b5c:b731:3eb7:ef9c/64 scope link noprefixroute 
+         valid_lft forever preferred_lft forever
+  ```
 
 As you can see We can still kill a process running in our system even if `sh` process has been chrooted, in other words no isolation at all.
-Problem there is that `sh` process is still in the same namespaces of the other process in the system
+Here problem is that `sh` process is still in the same namespaces of the other process in the system. 
+Type `exit` and come back home.
 
 ##### Namespaces
 
@@ -173,8 +242,29 @@ option | meaning
 Knowing that we can now create new *pid*,*ipc*,*mount*,*net* namespaces for our `sh` passing `-f` in order to make it a child of the unshare process.
 
 * `sudo unshare -fmipn --mount-proc chroot $PWD /bin/sh -c "/bin/mount -t proc proc /proc && hostname test && /bin/sh"`
-* run inside namespace `ps aux`, `ip a show`
-
+  ```
+  ❯ sudo unshare -fmipn --mount-proc chroot $PWD /bin/sh -c "/bin/mount -t proc proc /proc && hostname test && /bin/sh"
+  # ls
+  bin  boot  dev	etc  home  lib	lib64  media  mnt  opt	proc  root  run  sbin  srv  sys  tmp  usr  var
+  # 
+  ```
+  It seems nothing's changed but...
+* run inside namespace `ps aux`
+  ```
+  USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+  root           1  0.0  0.0   4340   768 ?        S    15:38   0:00 /bin/sh -c /bin/mount -t proc proc /proc && hostname test && /bin/sh
+  root           4  0.0  0.0   4340   724 ?        S    15:38   0:00 /bin/sh
+  root           7  0.0  0.0  17504  2088 ?        R+   15:40   0:00 ps aux
+  ```
+  We've got isolation, `sh` and `ps` are the only processes running in current namespace
+* `ip a show`
+   ```
+   # ip a show
+   1: lo: <LOOPBACK> mtu 65536 qdisc noop state DOWN group default qlen 1000
+       link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+   ```
+   net stack also changed, we're inside new network namespace and we've lost our net interfaces
+   
 Now we can't see processes outside our new *pid* namespace, processes are isolated from those ones running in the host machine in global *pid* namespace.
 We've finally obtained a complete isolation at kernel level for our `sh` process.
 
