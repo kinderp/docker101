@@ -271,11 +271,98 @@ We've finally obtained a complete isolation at kernel level for our `sh` process
 
 ##### Cgroups
 
-* `cgroup_id=cgroup_$(shuf -i 1000-2000 -n 1)`
+Cgroups is just a kernel feature to track/group/organize running processes.
+Each process can be tracked even if it's running insidea a container or inside host machine.
+Using cgropus you can track and limit resources used by a group of processes.
+
+Implementation of cgroups are **subsystems**, you can think that as a way to interact with cgroups.
+There are different subsystems (thery are called **controllers** also in linux man pages).
+
+You can see all the controllers available just listing `/sys/fs/cgroup/`.
+
+So `cpuset`,`memory` dirs down below on are available controllers you can use to limit memory/cpu usage for processes.
+
+```
+❯ ls -l /sys/fs/cgroup/
+total 0
+dr-xr-xr-x 6 root root  0 Sep  7 08:22 blkio
+lrwxrwxrwx 1 root root 11 Sep  7 08:22 cpu -> cpu,cpuacct
+lrwxrwxrwx 1 root root 11 Sep  7 08:22 cpuacct -> cpu,cpuacct
+dr-xr-xr-x 7 root root  0 Sep  7 08:22 cpu,cpuacct
+dr-xr-xr-x 3 root root  0 Sep  7 08:22 cpuset
+dr-xr-xr-x 9 root root  0 Sep  7 08:22 devices
+dr-xr-xr-x 6 root root  0 Sep  7 08:22 freezer
+dr-xr-xr-x 3 root root  0 Sep  7 08:22 hugetlb
+dr-xr-xr-x 7 root root  0 Sep  7 08:22 memory
+lrwxrwxrwx 1 root root 16 Sep  7 08:22 net_cls -> net_cls,net_prio
+dr-xr-xr-x 3 root root  0 Sep  7 08:22 net_cls,net_prio
+lrwxrwxrwx 1 root root 16 Sep  7 08:22 net_prio -> net_cls,net_prio
+dr-xr-xr-x 3 root root  0 Sep  7 08:22 perf_event
+dr-xr-xr-x 6 root root  0 Sep  7 08:22 pids
+dr-xr-xr-x 2 root root  0 Sep  7 08:22 rdma
+dr-xr-xr-x 6 root root  0 Sep  7 08:22 systemd
+dr-xr-xr-x 5 root root  0 Sep  7 08:22 unified
+
+```
+
+For example if you wanna limit memory usage for some process you can create a new cgroup called `test` 
+with a `memory` controller and then set your limits and once (we'll see later) done a new
+directory `test` will be created under `/sys/fs/cgroup/memory/`.
+
+If you list `/sys/fs/cgroup/memory` you'll see all memory cgroups in your system.
+
+Docker uses cgropus so it has its own `docker` dir under `/sys/fs/cgroup`, running
+a find cmd will display all the cgroups managed by docker.
+
+```
+❯ find /sys/fs/cgroup/ -name docker
+/sys/fs/cgroup/cpuset/docker
+/sys/fs/cgroup/blkio/docker
+/sys/fs/cgroup/net_cls,net_prio/docker
+/sys/fs/cgroup/memory/docker
+/sys/fs/cgroup/hugetlb/docker
+/sys/fs/cgroup/devices/docker
+/sys/fs/cgroup/pids/docker
+/sys/fs/cgroup/cpu,cpuacct/docker
+/sys/fs/cgroup/freezer/docker
+/sys/fs/cgroup/perf_event/docker
+/sys/fs/cgroup/systemd/docker
+```
+
+Istead to manually create dirs and files under `/sys/fs/cgroup/` we can use `cgcreate`.
+
+Let's try to create cpu and memory controllers and then set some limits for our process.
+
+* `cgroup_id=test_cgroup`
 * `sudo cgcreate -g "cpu,cpuacct,memory:$cgroup_id"` (maybe you'd need cgroup-tools, `apt-get install cgroup-tools`)
-* `sudo cgcreate -g "cpu,cpuacct,memory:$cgroup_id"`
-* `cgset -r cpu.shares=512 "$cgroup_id" && cgset -r memory.limit_in_bytes=1000000000 "$cgroup_id"`
+  * `-g` just define which controllers you wanna create for that new control group named test_cgroup.
+  * After this point you've created your new memory and cpu cgroups and two new dirs should appear under `/sys/fs/cgroup`
+    ```
+    ❯ find /sys/fs/cgroup/ -name test_cgroup
+    /sys/fs/cgroup/memory/test_cgroup
+    /sys/fs/cgroup/cpu,cpuacct/test_cgroup
+    ```
+* `sudo cgset -r memory.limit_in_bytes=1000000000 "$cgroup_id"`
+   * `-r` define which file (limit) needs to be modifed, each file rapresents some limit. You can use [official kernel doc](https://www.kernel.org/doc/Documentation/cgroup-v1/memory.txt) to know all the possible existing limitations.
+   ```
+   cat /sys/fs/cgroup/memory/test_cgroup/memory.limit_in_bytes
+   999997440
+   ```
 * `sudo cgexec -g "cpu,cpuacct,memory:$cgroup_id" unshare -fmipn --mount-proc chroot $PWD /bin/sh -c "/bin/mount -t proc proc /proc && hostname test && /bin/sh"`
+
+Now let's try to decrease memory to some ridiculous value
+
+* `sudo cgset -r memory.limit_in_bytes=1000000 "$cgroup_id"`
+  ```
+  ❯ cat /sys/fs/cgroup/memory/test_cgroup/memory.limit_in_bytes
+  999424
+  ```
+``` 
+❯ sudo cgexec -g "memory:$cgroup_id" unshare -fmipn --mount-proc chroot $PWD /bin/sh -c "/bin/mount -t proc proc /proc && hostname test && /bin/sh"
+[1]    2462187 killed     sudo cgexec -g "memory:$cgroup_id" unshare -fmipn --mount-proc chroot $PWD  -
+```
+
+
 
 ### Docker Images
 
