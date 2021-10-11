@@ -79,6 +79,29 @@ Lab takes space on disk so it's a good idea removing it after your training sess
 
 ![](https://github.com/kinderp/docker101/blob/master/images/vm_vs_container.jpeg)
 
+In order to understand why container technology replaced the previous one, virtual machines, we weed to go back in 90s years
+when IT company still owned its own physical servers. In that gold erea did already exist one big rule:  use one server for
+deploying only one business application, in other words do not share a single production execution environment for two or more applications. 
+This rule: **one single and secure isolated execution environmen** was caused by two main reasons:
+
+* The less is your stack you expose The less will be security risks you're gonna take
+* You could fall in dependency hell situation updating some lib used by two different applications, breaking badly your productin environment
+
+This constrain is still valid today even if VMs, cloud systems and then containers replaced physical servers as isolated execution environment.
+
+A so taugh constrain had high cost due to the fact all those dedicated resources dedicated just to a single application weren't used for the most of the time. There was a need to share two or more secure isolated execution envitonment inside the same machine, that was virtual machines!
+
+VMs let you to replicate more OS on the same server just using hypervisor that hides real physical hardware and exposes to higer level (vms) a collection of different logical hardware resources on top you can create your machine and install your isolated execution envitonment. That let sys admin to deploy different application on the same server respecting security constrain we talked before.
+
+That's good but it has stil a cost, an overhead representing by the OS of the guest machine that must be replicated each time for every new VM.
+
+Containers solved this issue offering a secure isolated execution environment without any overhead. 
+
+Containers are managed by a container engine that is just a process inside your OS that will be responsible to manage containers for you. Inside a container you can deploy your application or a part of it being sure tha your code will be isolated from other processes of your system.
+
+How does that is possible will be one of the topic of the next paragraphs 
+
+
 ### Docker Architecture
 
 Official docs [here](https://docs.docker.com/get-started/overview/#docker-architecture)
