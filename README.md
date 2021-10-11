@@ -119,6 +119,25 @@ After a while containerd and runC were split out from the core of Docker.
 
 ##### Build your filesystem
 
+First of all we have to create from scratch a linux fs tarball containing all we need. 
+We can use [buildroot](https://github.com/buildroot/buildroot) for this purpose. If you
+already played with kernel compilation in the past it seems pretty similar. It has a
+ncurses interface where you can define taget architecture, glibc version, packages and
+so on, whatever you want include in your final linux tarball.
+
+If you wanna make a try you can just clone buildroot
+
+* `git clone git@github.com:buildroot/buildroot.git`
+
+and run ncurses interface with
+
+* `make menuconfig`
+
+[Right here](https://youtu.be/gMpldbcMHuI?t=1246) you can find a good explanation on how to set all those stuff.
+
+For our purpose we can set our target architecture as `x86_64` and set `glibc` as part of our toolchain but feel free
+to play around and experiment with menuconfig you can also choose which packages will be inclueded in final result.
+
 * `wget https://github.com/ericchiang/containers-from-scratch/releases/download/v0.1.0/rootfs.tar.gz`
 * `mkdir rootfs`
 * `cd rootfs`
