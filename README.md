@@ -80,7 +80,7 @@ Lab takes space on disk so it's a good idea removing it after your training sess
 ![](https://github.com/kinderp/docker101/blob/master/images/vm_vs_container.jpeg)
 
 In order to understand why container technology replaced the previous one, virtual machines, we weed to go back in 90s years
-when IT company still owned its own physical servers. In that gold erea did already exist one big rule:  use one server for
+when IT companies still owned their own physical servers. In that gold erea did already exist one big rule:  use one server for
 deploying only one business application, in other words do not share a single production execution environment for two or more applications. 
 This rule: **one single and secure isolated execution environmen** was caused by two main reasons:
 
