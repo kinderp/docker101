@@ -82,14 +82,14 @@ Lab takes space on disk so it's a good idea removing it after your training sess
 In order to understand why container technology replaced the previous one, virtual machines, we weed to go back in 90s years
 when IT companies still owned their own physical servers. In that gold erea did already exist one big rule:  use one server for
 deploying only one business application, in other words do not share a single production execution environment for two or more applications. 
-This rule: **one single and secure isolated execution environmen** was caused by two main reasons:
+This rule: **one single and secure isolated execution environment** was caused by two main reasons:
 
 * The less is your stack you expose The less will be security risks you're gonna take
 * You could fall in dependency hell situation updating some lib used by two different applications, breaking badly your productin environment
 
 This constrain is still valid today even if VMs, cloud systems and then containers replaced physical servers as isolated execution environment.
 
-A so taugh constrain had high cost due to the fact all those dedicated resources dedicated just to a single application weren't used for the most of the time. There was a need to share two or more secure isolated execution envitonment inside the same machine, that was virtual machines!
+A so taugh constrain had high cost due to the fact all those resources were just dedicated to a single application and so they weren't used for the most of the time. There was a need to share two or more secure isolated execution envitonment inside the same machine, that's a virtual machine!
 
 VMs let you to replicate more OS on the same server just using hypervisor that hides real physical hardware and exposes to higer level (vms) a collection of different logical hardware resources on top you can create your machine and install your isolated execution envitonment. That let sys admin to deploy different application on the same server respecting security constrain we talked before.
 
