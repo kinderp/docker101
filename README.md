@@ -91,7 +91,7 @@ This constrain is still valid today even if VMs, cloud systems and then containe
 
 A so taugh constrain had high cost due to the fact all those resources were just dedicated to a single application and so they weren't used for the most of the time. There was a need to share two or more secure isolated execution envitonment inside the same machine, that's a virtual machine!
 
-VMs let you to replicate more OS on the same server just using hypervisor that hides real physical hardware and exposes to higer level (vms) a collection of different logical hardware resources on top you can create your machine and install your isolated execution envitonment. That let sys admin to deploy different application on the same server respecting security constrain we talked before.
+VMs let you to replicate more OS on the same server just using hypervisor that hides real physical hardware and exposes to higer level (vms) a collection of different logical hardware resources on top you can create your machine and install your isolated execution environment. That let sys admin to deploy different applications on the same server respecting security constraint we talked before.
 
 That's good but it has stil a cost, an overhead representing by the OS of the guest machine that must be replicated each time for every new VM.
 
