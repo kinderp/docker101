@@ -1,7 +1,7 @@
 input=".env"
-while IFS= read -r line
+while read -r line
 do
-  export "$line"
+	export "$line"
 done < "$input"
 
 docker exec `docker ps|grep mysql:8.0.19|awk '{ print $1 }'` mysql --password=$DB_PASSWORD -Bse "drop database $DB_NAME;" 2>/dev/null
