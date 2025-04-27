@@ -59,7 +59,7 @@ if __name__ == '__main__':
     MONGO_DB_CONNECTION = MONGO_CONNECTION[MONGO_DBNAME]
 
     RABBIT_CONNECTION = pika.BlockingConnection(
-            pika.ConnectionParameters(host=RABBIT_HOST)
+            pika.ConnectionParameters(host=RABBIT_HOST, heartbeat=0)
     )
     RABBIT_CHANNEL = RABBIT_CONNECTION.channel()
 
